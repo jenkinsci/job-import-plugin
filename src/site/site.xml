@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="${project.name}">
+
+  <!--
+  The MIT License
+
+  Copyright (c) 2011, Jesse Farinacci
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+  THE SOFTWARE.
+  -->
+
+  <skin>
+    <groupId>org.kohsuke</groupId>
+    <artifactId>maven-skin</artifactId>
+    <version>1.1</version>
+  </skin>
+
+  <bannerLeft>
+    <name>${project.name}</name>
+    <href>${project.url}</href>
+  </bannerLeft>
+
+  <publishDate position="navigation-bottom" />
+  <version position="navigation-bottom" />
+
+  <body>
+    <head>
+      <link rel="shortcut icon" type="image/x-icon" href="http://jenkins-ci.org/sites/default/files/favicon.png" />
+      <link rel="meta" title="DOAP" type="application/rdf+xml" href="doap.rdf" />
+    </head>
+
+    <links>
+      <item name="Plugin Wiki" href="http://wiki.jenkins-ci.org/display/JENKINS/Job+Import+Plugin" />
+      <item name="Plugin Issues" href="http://issues.jenkins-ci.org/browse/JENKINS/component/xxxxx" />
+      <item name="Plugin SCM" href="https://github.com/jenkinsci/job-import-plugin" />
+      <item name="Jenkins" href="http://jenkins-ci.org/" />
+    </links>
+
+    <menu name="Contact">
+      <item name="Mailing Lists" href="mail-lists.html" />
+      <item name="Project Team" href="team-list.html" />
+    </menu>
+
+    <menu ref="modules" />
+    <menu ref="reports" />
+  </body>
+
+</project>
