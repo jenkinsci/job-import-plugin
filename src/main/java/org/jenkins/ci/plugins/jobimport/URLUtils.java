@@ -42,7 +42,7 @@ public final class URLUtils {
     return fetchUrl(new URL(url));
   }
 
-  public static String fetchUrl(final URL url) throws MalformedURLException, IOException {
+  public static String fetchUrl(final URL url) throws IOException {
     notNull(url);
 
     InputStream inputStream = null;
