@@ -36,11 +36,12 @@
       <h1>${%Job.Import.Plugin.Title}</h1>
       <h2>${%Job.Import.Plugin.Description}</h2>
       <br/>
-      <f:form name="query" action="query" method="post">
+      <f:form name="query" action="query" method="get">
         <f:section title="${%Job.Import.Plugin.Query.Section.Title}">
           <f:entry title="${%Job.Import.Plugin.Query.Section.RemoteUrl.Title}" field="remoteUrl">
-            <f:textbox />
+            <f:textbox name="remoteUrl" field="remoteUrl"/>
           </f:entry>
+          <!--f:validateButton title="${%Job.Import.Plugin.Query.Section.Validate.Title}" method="doTestConnection" with="remoteUrl"/-->
           <f:block>
             <input type="submit" value="${%Job.Import.Plugin.Query.Section.Submit.Name}" />
           </f:block>
@@ -59,7 +60,7 @@
               </tr>
               <j:forEach var="job" items="${it.remoteJobs}">
                 <tr>
-                  <td>[x]</td>
+                  <td><f:checkbox name="jobUrl" value="${job.url}"/></td>
                   <td><a target="_blank" href="${job.url}">${job.name}</a></td>
                   <td>${job.description}</td>
                 </tr>
@@ -67,7 +68,7 @@
             </table>
           </f:block>
           <f:block>
-            <input type="submit" value="${%Job.Import.Plugin.Import.Section.Submit.Name}" />
+            <input type="submit" value="${%Job.Import.Plugin.Import.Section.Submit.Name}"/>
           </f:block>
         </f:section>
       </f:form>
