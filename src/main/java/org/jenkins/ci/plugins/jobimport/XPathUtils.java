@@ -53,63 +53,17 @@ public final class XPathUtils {
 
   private static final XPathFactory           XPATH_FACTORY            = XPathFactory.newInstance();
 
-  /**
-   * A convenience method to compile a {@link java.lang.String} into an
-   * {@link javax.xml.xpath.XPathExpression}.
-   * 
-   * @param expression
-   *          the {@link java.lang.String} to compile
-   * 
-   * @return the compiled {@link javax.xml.xpath.XPathExpression}
-   * 
-   * @throws XPathExpressionException
-   */
   public static XPathExpression compile(final String expression) throws XPathExpressionException {
     notNull(expression);
 
     return XPATH_FACTORY.newXPath().compile(expression);
   }
 
-  /**
-   * A convenience method to evaluate a non-compiled XPath expression and return
-   * an {@link java.util.List} of {@link java.lang.String}s representing the
-   * {@link org.w3c.dom.Node}'s internal text content.
-   * 
-   * @param document
-   *          the document to operate on
-   * @param expression
-   *          the non-compiled expression to evaluate
-   * 
-   * @return the {@link java.util.List} of {@link java.lang.String} internal
-   *         text content result of evaluation
-   * 
-   * @throws XPathExpressionException
-   * 
-   * @see XPathUtils#compile(String)
-   * @see XPathUtils#evaluateNodeListTextXPath(Document, XPathExpression)
-   */
   public static List<String> evaluateNodeListTextXPath(final Document document, final String expression)
       throws XPathExpressionException {
     return evaluateNodeListTextXPath(document, compile(expression));
   }
 
-  /**
-   * A convenience method to evaluate an {@link javax.xml.xpath.XPathExpression}
-   * and return an {@link java.util.List} of {@link java.lang.String}s
-   * representing the {@link org.w3c.dom.Node}'s internal text content.
-   * 
-   * @param document
-   *          the document to operate on
-   * @param expression
-   *          the {@link javax.xml.xpath.XPathExpression} to evaluate
-   * 
-   * @return the {@link java.util.List} of {@link java.lang.String} internal
-   *         text content result of evaluation
-   * 
-   * @throws XPathExpressionException
-   * 
-   * @see XPathUtils#evaluateNodeListTextXPath(Document, XPathExpression)
-   */
   public static List<String> evaluateNodeListTextXPath(final Document document, final XPathExpression expression)
       throws XPathExpressionException {
     notNull(document);
@@ -124,44 +78,11 @@ public final class XPathUtils {
     return result;
   }
 
-  /**
-   * A convenience method to evaluate a non-compiled XPath expression and return
-   * an {@link java.util.List} of {@link org.w3c.dom.Node}s.
-   * 
-   * @param document
-   *          the document to operate on
-   * @param expression
-   *          the non-compiled expression to evaluate
-   * 
-   * @return the {@link java.util.List} of {@link org.w3c.dom.Node}s result of
-   *         evaluation
-   * 
-   * @throws XPathExpressionException
-   * 
-   * @see XPathUtils#compile(String)
-   * @see XPathUtils#evaluateNodeListXPath(Document, XPathExpression)
-   */
   public static List<Node> evaluateNodeListXPath(final Document document, final String expression)
       throws XPathExpressionException {
     return evaluateNodeListXPath(document, compile(expression));
   }
 
-  /**
-   * A convenience method to evaluate an {@link javax.xml.xpath.XPathExpression}
-   * and return an {@link java.util.List} of {@link org.w3c.dom.Node}s.
-   * 
-   * @param document
-   *          the document to operate on
-   * @param expression
-   *          the {@link javax.xml.xpath.XPathExpression} to evaluate
-   * 
-   * @return the {@link java.util.List} of {@link org.w3c.dom.Node}s result of
-   *         evaluation
-   * 
-   * @throws XPathExpressionException
-   * 
-   * @see javax.xml.xpath.XPathConstants#NODESET
-   */
   public static List<Node> evaluateNodeListXPath(final Document document, final XPathExpression expression)
       throws XPathExpressionException {
     notNull(document);
@@ -178,42 +99,11 @@ public final class XPathUtils {
     return result;
   }
 
-  /**
-   * A convenience method to evaluate a non-compiled XPath expression and return
-   * a {@link java.lang.String}.
-   * 
-   * @param document
-   *          the document to operate on
-   * @param expression
-   *          the non-compiled expression to evaluate
-   * 
-   * @return the {@link java.lang.String} result of evaluation
-   * 
-   * @throws XPathExpressionException
-   * 
-   * @see XPathUtils#compile(String)
-   * @see XPathUtils#evaluateStringXPath(Document, XPathExpression)
-   */
   public static String evaluateStringXPath(final Document document, final String expression)
       throws XPathExpressionException {
     return evaluateStringXPath(document, compile(expression));
   }
 
-  /**
-   * A convenience method to evaluate an {@link javax.xml.xpath.XPathExpression}
-   * and return a {@link java.lang.String}.
-   * 
-   * @param document
-   *          the document to operate on
-   * @param expression
-   *          the {@link javax.xml.xpath.XPathExpression} to evaluate
-   * 
-   * @return the {@link java.lang.String} result of evaluation
-   * 
-   * @throws XPathExpressionException
-   * 
-   * @see javax.xml.xpath.XPathConstants#STRING
-   */
   public static String evaluateStringXPath(final Document document, final XPathExpression expression)
       throws XPathExpressionException {
     notNull(document);
@@ -228,20 +118,6 @@ public final class XPathUtils {
     }
   }
 
-  /**
-   * A convenience method to convert an {@link java.io.InputStream} into a
-   * {@link org.w3c.dom.Document}. The {@link java.io.InputStream} is not closed
-   * during this process!
-   * 
-   * @param inputStream
-   *          the {@link java.io.InputStream} to parse
-   * 
-   * @return a newly parsed {@link org.w3c.dom.Document}
-   * 
-   * @throws SAXException
-   * @throws IOException
-   * @throws ParserConfigurationException
-   */
   public static Document parse(final InputStream inputStream) throws SAXException, IOException,
       ParserConfigurationException {
     notNull(inputStream);
@@ -249,21 +125,6 @@ public final class XPathUtils {
     return DOCUMENT_BUILDER_FACTORY.newDocumentBuilder().parse(inputStream);
   }
 
-  /**
-   * A convenience method to convert a {@link java.lang.String} input into a
-   * {@link org.w3c.dom.Document}.
-   * 
-   * @param input
-   *          the input to parse
-   * 
-   * @return a newly parsed {@link org.w3c.dom.Document}
-   * 
-   * @throws SAXException
-   * @throws IOException
-   * @throws ParserConfigurationException
-   * 
-   * @see XPathUtils#parse(InputStream)
-   */
   public static Document parse(final String input) throws SAXException, IOException, ParserConfigurationException {
     notNull(input);
 
@@ -278,21 +139,6 @@ public final class XPathUtils {
     }
   }
 
-  /**
-   * A convenience method to convert the contents of a {@link java.net.URL} into
-   * a {@link org.w3c.dom.Document}.
-   * 
-   * @param url
-   *          the {@link java.net.URL} to parse
-   * 
-   * @return a newly parsed {@link org.w3c.dom.Document}
-   * 
-   * @throws SAXException
-   * @throws IOException
-   * @throws ParserConfigurationException
-   * 
-   * @see XPathUtils#parse(InputStream)
-   */
   public static Document parse(final URL url) throws SAXException, IOException, ParserConfigurationException {
     notNull(url);
 

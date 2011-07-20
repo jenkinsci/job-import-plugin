@@ -48,31 +48,56 @@
         </f:section>
       </f:form>
       <j:if test="${it.remoteJobsAvailable}">
-      <br/>
-      <f:form name="import" action="import" method="post">
-        <f:section title="${%Job.Import.Plugin.Import.Section.Title}">
-          <f:block>
-            <table class="jobImportPlugin" cellpadding="3" cellspacing="3">
-              <tr>
-                <th>Import?</th>
-                <th>Name</th>
-                <th>Description</th>
-              </tr>
-              <j:forEach var="job" items="${it.remoteJobs}">
+        <br/>
+        <f:form name="import" action="import" method="post">
+          <f:section title="${%Job.Import.Plugin.Import.Section.Title}">
+            <f:block>
+              <table class="jobImportPlugin" cellpadding="3" cellspacing="3">
                 <tr>
-                  <td><f:checkbox name="jobUrl" value="${job.url}"/></td>
-                  <td><a target="_blank" href="${job.url}">${job.name}</a></td>
-                  <td>${job.description}</td>
+                  <th>Import?</th>
+                  <th>Name</th>
+                  <th>Description</th>
                 </tr>
-              </j:forEach>
-            </table>
-          </f:block>
-          <f:block>
-            <input type="submit" value="${%Job.Import.Plugin.Import.Section.Submit.Name}"/>
-          </f:block>
-        </f:section>
-      </f:form>
+                <j:forEach var="job" items="${it.remoteJobs}">
+                  <tr>
+                    <td><f:checkbox name="jobUrl" value="${job.url}"/></td>
+                    <td><a target="_blank" href="${job.url}">${job.name}</a></td>
+                    <td>${job.description}</td>
+                  </tr>
+                </j:forEach>
+              </table>
+            </f:block>
+            <f:block>
+              <input type="submit" value="${%Job.Import.Plugin.Import.Section.Submit.Name}"/>
+            </f:block>
+          </f:section>
+        </f:form>
+      </j:if>
+      <j:if test="${it.remoteJobsImportStatusAvailable}">
+        <br/>
+        <f:form name="clear" action="clear" method="post">
+          <f:section title="${%Job.Import.Plugin.Status.Section.Title}">
+            <f:block>
+              <table class="jobImportPlugin" cellpadding="3" cellspacing="3">
+                <tr>
+                  <th>Name</th>
+                  <th>Status</th>
+                </tr>
+                <j:forEach var="status" items="${it.remoteJobsImportStatus}">
+                  <tr>
+                    <td><a target="_blank" href="${rootUrl}/job/${status.key.name}">${status.key.name}</a></td>
+                    <td>${status.value.status}</td>
+                  </tr>
+                </j:forEach>
+              </table>
+            </f:block>
+            <f:block>
+              <input type="submit" value="${%Job.Import.Plugin.Status.Section.Submit.Name}"/>
+            </f:block>
+          </f:section>
+        </f:form>
       </j:if>
     </l:main-panel>
   </l:layout>
 </j:jelly>
+

@@ -31,9 +31,9 @@ import hudson.util.FormValidation;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.Arrays;
-import java.util.Map;
-import java.util.Set;
+import java.util.SortedMap;
 import java.util.SortedSet;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.logging.Logger;
 
@@ -42,7 +42,6 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathExpressionException;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.builder.ToStringBuilder;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
@@ -55,20 +54,41 @@ import org.xml.sax.SAXException;
 @Extension
 public final class JobImportAction implements RootAction {
 
-  private static final Logger LOG = Logger.getLogger(JobImportAction.class.getName());
+  private static final Logger                               LOG                    = Logger
+                                                                                       .getLogger(JobImportAction.class
+                                                                                           .getName());
 
-  private String              remoteUrl;
+  private String                                            remoteUrl;
 
-  @SuppressWarnings({ "rawtypes", "unchecked" })
+  private final SortedSet<RemoteJob>                        remoteJobs             = new TreeSet<RemoteJob>();
+
+  private final SortedMap<RemoteJob, RemoteJobImportStatus> remoteJobsImportStatus = new TreeMap<RemoteJob, RemoteJobImportStatus>();
+
+  public void doClear(final StaplerRequest request, final StaplerResponse response) throws ServletException,
+      IOException {
+    remoteUrl = null;
+    remoteJobs.clear();
+    remoteJobsImportStatus.clear();
+    response.forwardToPreviousPage(request);
+  }
+
   public void doImport(final StaplerRequest request, final StaplerResponse response) throws ServletException,
       IOException {
-    for (final Map.Entry parameter : (Set<Map.Entry>) request.getParameterMap().entrySet()) {
-      LOG.info(parameter.getKey() + " -> " + ToStringBuilder.reflectionToString(parameter.getValue()));
-    }
+    remoteJobsImportStatus.clear();
 
-    if (request.hasParameter("jobUrl")) {
-      final SortedSet<String> jobUrls = new TreeSet<String>(Arrays.asList(request.getParameterValues("jobUrl")));
+    if (isRemoteJobsAvailable()) {
+      if (request.hasParameter("jobUrl")) {
+        for (final String jobUrl : Arrays.asList(request.getParameterValues("jobUrl"))) {
+          final RemoteJob remoteJob = getRemoteJobs(jobUrl);
+          if (remoteJob != null) {
+            if (!remoteJobsImportStatus.containsKey(remoteJob)) {
+              remoteJobsImportStatus.put(remoteJob, new RemoteJobImportStatus(remoteJob));
+            }
 
+            remoteJobsImportStatus.get(remoteJob).setStatus("SUCCESS!");
+          }
+        }
+      }
     }
 
     response.forwardToPreviousPage(request);
@@ -76,26 +96,13 @@ public final class JobImportAction implements RootAction {
 
   public void doQuery(final StaplerRequest request, final StaplerResponse response) throws ServletException,
       IOException {
+    remoteJobs.clear();
+    remoteJobsImportStatus.clear();
     remoteUrl = request.getParameter("remoteUrl");
-    response.forwardToPreviousPage(request);
-  }
 
-  public FormValidation doTestConnection(@QueryParameter("remoteUrl") final String remoteUrl) {
-    return FormValidation.ok();
-  }
-
-  public String getDisplayName() {
-    return Messages.DisplayName();
-  }
-
-  public String getIconFileName() {
-    return "/images/32x32/setting.png";
-  }
-
-  public SortedSet<RemoteJob> getRemoteJobs() {
     try {
       if (StringUtils.isNotEmpty(remoteUrl)) {
-        return RemoteJobUtils.fromXml(URLUtils.fetchUrl(remoteUrl + "/api/xml"));
+        remoteJobs.addAll(RemoteJobUtils.fromXml(URLUtils.fetchUrl(remoteUrl + "/api/xml")));
       }
     }
 
@@ -119,7 +126,39 @@ public final class JobImportAction implements RootAction {
       // fall through
     }
 
-    return new TreeSet<RemoteJob>();
+    response.forwardToPreviousPage(request);
+  }
+
+  public FormValidation doTestConnection(@QueryParameter("remoteUrl") final String remoteUrl) {
+    return FormValidation.ok();
+  }
+
+  public String getDisplayName() {
+    return Messages.DisplayName();
+  }
+
+  public String getIconFileName() {
+    return "/images/32x32/setting.png";
+  }
+
+  public SortedSet<RemoteJob> getRemoteJobs() {
+    return remoteJobs;
+  }
+
+  private RemoteJob getRemoteJobs(final String jobUrl) {
+    if (StringUtils.isNotEmpty(jobUrl)) {
+      for (final RemoteJob remoteJob : remoteJobs) {
+        if (jobUrl.equals(remoteJob.getUrl())) {
+          return remoteJob;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  public SortedMap<RemoteJob, RemoteJobImportStatus> getRemoteJobsImportStatus() {
+    return remoteJobsImportStatus;
   }
 
   public String getRemoteUrl() {
@@ -131,7 +170,11 @@ public final class JobImportAction implements RootAction {
   }
 
   public boolean isRemoteJobsAvailable() {
-    return getRemoteJobs().size() > 0;
+    return remoteJobs.size() > 0;
+  }
+
+  public boolean isRemoteJobsImportStatusAvailable() {
+    return remoteJobsImportStatus.size() > 0;
   }
 
   public void setRemoteUrl(final String remoteUrl) {
