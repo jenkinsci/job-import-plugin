@@ -41,6 +41,7 @@ import javax.servlet.ServletException;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathExpressionException;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
@@ -56,21 +57,11 @@ public final class JobImportAction implements RootAction {
 
   private static final Logger LOG = Logger.getLogger(JobImportAction.class.getName());
 
-  public static void main(final String[] args) {
-    try {
-      System.out.println(RemoteJobUtils.fromXml(URLUtils.fetchUrl("http://localhost:8080/view/ViewName/api/xml")));
-    }
-
-    catch (final Exception e) {
-      e.printStackTrace();
-    }
-  }
+  private String              remoteUrl;
 
   @SuppressWarnings({ "rawtypes", "unchecked" })
   public void doImport(final StaplerRequest request, final StaplerResponse response) throws ServletException,
       IOException {
-    LOG.info("doImport(request, response)");
-
     for (final Map.Entry parameter : (Set<Map.Entry>) request.getParameterMap().entrySet()) {
       LOG.info(parameter.getKey() + " -> " + ToStringBuilder.reflectionToString(parameter.getValue()));
     }
@@ -85,9 +76,7 @@ public final class JobImportAction implements RootAction {
 
   public void doQuery(final StaplerRequest request, final StaplerResponse response) throws ServletException,
       IOException {
-    LOG.info("doQuery(request, response)");
-    LOG.info(request.getParameter("remoteUrl"));
-
+    remoteUrl = request.getParameter("remoteUrl");
     response.forwardToPreviousPage(request);
   }
 
@@ -103,24 +92,38 @@ public final class JobImportAction implements RootAction {
     return "/images/32x32/setting.png";
   }
 
-  public SortedSet<RemoteJob> getRemoteJobs(/*
-                                             * @QueryParameter("remoteUrl")
-                                             * final String remoteUrl
-                                             */) throws XPathExpressionException, MalformedURLException, SAXException,
-      IOException, ParserConfigurationException {
-    // final SortedSet<RemoteJob> remoteJobs = new TreeSet<RemoteJob>();
-    //
-    // remoteJobs.add(new RemoteJob("Job 1",
-    // "http://ci.jenkins-ci.org/job/Job1", "Job 1 is an example job."));
-    // remoteJobs.add(new RemoteJob("Job 2",
-    // "http://ci.jenkins-ci.org/job/Job2", "Job 2 is an example job."));
-    // remoteJobs.add(new RemoteJob("Job 3",
-    // "http://ci.jenkins-ci.org/job/Job3", "Job 3 is an example job."));
-    //
-    // return remoteJobs;
+  public SortedSet<RemoteJob> getRemoteJobs() {
+    try {
+      if (StringUtils.isNotEmpty(remoteUrl)) {
+        return RemoteJobUtils.fromXml(URLUtils.fetchUrl(remoteUrl + "/api/xml"));
+      }
+    }
 
-    LOG.info("getRemoteJobs(" /* + remoteUrl */+ ")");
-    return RemoteJobUtils.fromXml(URLUtils.fetchUrl(/* remoteUrl + */"/api/xml"));
+    catch (final XPathExpressionException e) {
+      // fall through
+    }
+
+    catch (final MalformedURLException e) {
+      // fall through
+    }
+
+    catch (final SAXException e) {
+      // fall through
+    }
+
+    catch (final IOException e) {
+      // fall through
+    }
+
+    catch (final ParserConfigurationException e) {
+      // fall through
+    }
+
+    return new TreeSet<RemoteJob>();
+  }
+
+  public String getRemoteUrl() {
+    return remoteUrl;
   }
 
   public String getUrlName() {
@@ -128,6 +131,10 @@ public final class JobImportAction implements RootAction {
   }
 
   public boolean isRemoteJobsAvailable() {
-    return true;// getRemoteJobs().size() > 0;
+    return getRemoteJobs().size() > 0;
+  }
+
+  public void setRemoteUrl(final String remoteUrl) {
+    this.remoteUrl = remoteUrl;
   }
 }
