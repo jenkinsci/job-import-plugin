@@ -26,6 +26,7 @@ package org.jenkins.ci.plugins.jobimport;
 
 import hudson.Extension;
 import hudson.model.RootAction;
+import hudson.model.Hudson;
 import hudson.util.FormValidation;
 
 import java.io.IOException;
@@ -69,7 +70,7 @@ public final class JobImportAction implements RootAction {
     remoteUrl = null;
     remoteJobs.clear();
     remoteJobsImportStatus.clear();
-    response.forwardToPreviousPage(request);
+    response.sendRedirect(Hudson.getInstance().getRootUrl());
   }
 
   public void doImport(final StaplerRequest request, final StaplerResponse response) throws ServletException,
