@@ -48,6 +48,7 @@
         </f:section>
       </f:form>
       <j:if test="${it.remoteJobsAvailable}">
+        <j:if test="${!it.remoteJobsImportStatusAvailable}">
         <br/>
         <f:form name="import" action="import" method="post">
           <f:section title="${%Job.Import.Plugin.Import.Section.Title}">
@@ -72,6 +73,7 @@
             </f:block>
           </f:section>
         </f:form>
+        </j:if>
       </j:if>
       <j:if test="${it.remoteJobsImportStatusAvailable}">
         <br/>

@@ -36,6 +36,7 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.servlet.ServletException;
@@ -86,7 +87,24 @@ public final class JobImportAction implements RootAction {
               remoteJobsImportStatus.put(remoteJob, new RemoteJobImportStatus(remoteJob));
             }
 
-            remoteJobsImportStatus.get(remoteJob).setStatus("SUCCESS!");
+            try {
+              if (Hudson.getInstance().getItem(remoteJob.getName()) != null) {
+                remoteJobsImportStatus.get(remoteJob).setStatus(MessagesUtils.formatFailedDuplicateJobName());
+              }
+
+              else {
+                remoteJobsImportStatus.get(remoteJob).setStatus(MessagesUtils.formatSuccess());
+              }
+            }
+
+            catch (final Exception e) {
+              remoteJobsImportStatus.get(remoteJob).setStatus(MessagesUtils.formatFailedException(e));
+
+              LOG.warning(e.getMessage());
+              if (LOG.isLoggable(Level.INFO)) {
+                LOG.log(Level.INFO, e.getMessage(), e);
+              }
+            }
           }
         }
       }

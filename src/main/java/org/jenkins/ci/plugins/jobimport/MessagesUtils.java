@@ -31,6 +31,22 @@ package org.jenkins.ci.plugins.jobimport;
  * @since 1.0
  */
 public final class MessagesUtils {
+  public static String formatFailedDuplicateJobName() {
+    return Messages.Job_Import_Plugin_Import_Failed_Duplicate();
+  }
+
+  public static String formatFailedException(final Exception e) {
+    return formatFailedException(e.getMessage());
+  }
+
+  public static String formatFailedException(final String message) {
+    return Messages.Job_Import_Plugin_Import_Failed_Exception(message);
+  }
+
+  public static String formatSuccess() {
+    return Messages.Job_Import_Plugin_Import_Success();
+  }
+
   /**
    * Static-only access.
    */
