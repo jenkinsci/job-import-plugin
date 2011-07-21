@@ -43,6 +43,10 @@ public final class MessagesUtils {
     return Messages.Job_Import_Plugin_Import_Failed_Exception(message);
   }
 
+  public static String formatFailedNotAProject() {
+    return Messages.Job_Import_Plugin_Import_Failed_NotAProject();
+  }
+
   public static String formatSuccess() {
     return Messages.Job_Import_Plugin_Import_Success();
   }

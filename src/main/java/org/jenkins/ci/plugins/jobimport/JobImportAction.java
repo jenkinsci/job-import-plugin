@@ -30,6 +30,7 @@ import hudson.model.Hudson;
 import hudson.util.FormValidation;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.util.Arrays;
 import java.util.SortedMap;
@@ -43,6 +44,7 @@ import javax.servlet.ServletException;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathExpressionException;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
@@ -87,22 +89,49 @@ public final class JobImportAction implements RootAction {
               remoteJobsImportStatus.put(remoteJob, new RemoteJobImportStatus(remoteJob));
             }
 
-            try {
-              if (Hudson.getInstance().getItem(remoteJob.getName()) != null) {
-                remoteJobsImportStatus.get(remoteJob).setStatus(MessagesUtils.formatFailedDuplicateJobName());
-              }
+            // ---
 
-              else {
-                remoteJobsImportStatus.get(remoteJob).setStatus(MessagesUtils.formatSuccess());
-              }
+            if (Hudson.getInstance().getItem(remoteJob.getName()) != null) {
+              remoteJobsImportStatus.get(remoteJob).setStatus(MessagesUtils.formatFailedDuplicateJobName());
             }
 
-            catch (final Exception e) {
-              remoteJobsImportStatus.get(remoteJob).setStatus(MessagesUtils.formatFailedException(e));
+            else {
+              InputStream inputStream = null;
 
-              LOG.warning(e.getMessage());
-              if (LOG.isLoggable(Level.INFO)) {
-                LOG.log(Level.INFO, e.getMessage(), e);
+              try {
+                final String configXml = URLUtils.fetchUrl(remoteJob.getUrl() + "/config.xml");
+
+                if (isValidProject(configXml)) {
+                  inputStream = IOUtils.toInputStream(configXml);
+                  Hudson.getInstance().createProjectFromXML(remoteJob.getName(), inputStream);
+                  remoteJobsImportStatus.get(remoteJob).setStatus(MessagesUtils.formatSuccess());
+                }
+
+                else {
+                  remoteJobsImportStatus.get(remoteJob).setStatus(MessagesUtils.formatFailedNotAProject());
+                }
+              }
+
+              catch (final Exception e) {
+                LOG.warning("Job Import Failed: " + e.getMessage());
+                if (LOG.isLoggable(Level.INFO)) {
+                  LOG.log(Level.INFO, e.getMessage(), e);
+                }
+
+                // ---
+
+                remoteJobsImportStatus.get(remoteJob).setStatus(MessagesUtils.formatFailedException(e));
+
+                try {
+                  Hudson.getInstance().getItem(remoteJob.getName()).delete();
+                }
+                catch (final InterruptedException e2) {
+                  // do nothing
+                }
+              }
+
+              finally {
+                IOUtils.closeQuietly(inputStream);
               }
             }
           }
@@ -111,6 +140,22 @@ public final class JobImportAction implements RootAction {
     }
 
     response.forwardToPreviousPage(request);
+  }
+
+  private boolean isValidProject(final String configXml) {
+    if (StringUtils.isEmpty(configXml)) {
+      return false;
+    }
+
+    if (configXml.contains("<project>")) {
+      return true;
+    }
+
+    if (configXml.contains("<maven2-moduleset>")) {
+      return true;
+    }
+
+    return false;
   }
 
   public void doQuery(final StaplerRequest request, final StaplerResponse response) throws ServletException,
