@@ -47,7 +47,7 @@
 
     <links>
       <item name="Plugin Wiki" href="http://wiki.jenkins-ci.org/display/JENKINS/Job+Import+Plugin" />
-      <item name="Plugin Issues" href="http://issues.jenkins-ci.org/browse/JENKINS/component/xxxxx" />
+      <item name="Plugin Issues" href="https://issues.jenkins-ci.org/browse/JENKINS/component/15897" />
       <item name="Plugin SCM" href="https://github.com/jenkinsci/job-import-plugin" />
       <item name="Jenkins" href="http://jenkins-ci.org/" />
     </links>
