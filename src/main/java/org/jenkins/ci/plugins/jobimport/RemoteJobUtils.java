@@ -69,9 +69,9 @@ public final class RemoteJobUtils {
       XPATH_EXPRESSION_FREE_STYLE_PROJECT_URL = XPathUtils.compile("/freeStyleProject/url");
       XPATH_EXPRESSION_HUDSON_JOB_URL = XPathUtils.compile("/hudson/job/url");
       XPATH_EXPRESSION_LIST_VIEW_JOB_URL = XPathUtils.compile("/listView/job/url");
-      XPATH_EXPRESSION_MAVEN_MODULE_SET_DESCRIPTION = XPathUtils.compile("/freeStyleProject/description");
-      XPATH_EXPRESSION_MAVEN_MODULE_SET_NAME = XPathUtils.compile("/freeStyleProject/name");
-      XPATH_EXPRESSION_MAVEN_MODULE_SET_URL = XPathUtils.compile("/freeStyleProject/url");
+      XPATH_EXPRESSION_MAVEN_MODULE_SET_DESCRIPTION = XPathUtils.compile("/mavenModuleSet/description");
+      XPATH_EXPRESSION_MAVEN_MODULE_SET_NAME = XPathUtils.compile("/mavenModuleSet/name");
+      XPATH_EXPRESSION_MAVEN_MODULE_SET_URL = XPathUtils.compile("/mavenModuleSet/url");
     }
 
     catch (final XPathExpressionException e) {
