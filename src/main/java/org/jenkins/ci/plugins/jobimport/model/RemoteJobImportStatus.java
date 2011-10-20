@@ -22,66 +22,52 @@
  * SOFTWARE.
  */
 
-package org.jenkins.ci.plugins.jobimport;
+package org.jenkins.ci.plugins.jobimport.model;
 
 /**
  * @author <a href="mailto:jieryn@gmail.com">Jesse Farinacci</a>
  * @since 1.0
  */
-public final class RemoteJob implements Comparable<RemoteJob> {
-  private String name;
-  private String url;
-  private String description;
+public final class RemoteJobImportStatus implements Comparable<RemoteJobImportStatus> {
+  private RemoteJob remoteJob;
+  private String    status;
 
-  public RemoteJob() {
-    this((String) null, (String) null, (String) null);
+  public RemoteJobImportStatus() {
+    this((RemoteJob) null, (String) null);
   }
 
-  public RemoteJob(final String name) {
-    this(name, (String) null, (String) null);
+  public RemoteJobImportStatus(final RemoteJob remoteJob) {
+    this(remoteJob, (String) null);
   }
 
-  public RemoteJob(final String name, final String url) {
-    this(name, url, (String) null);
-  }
-
-  public RemoteJob(final String name, final String url, final String description) {
+  public RemoteJobImportStatus(final RemoteJob remoteJob, final String status) {
     super();
-    this.name = name;
-    this.url = url;
-    this.description = description;
+    this.remoteJob = remoteJob;
+    this.status = status;
   }
 
-  public String getName() {
-    return name;
+  public RemoteJob getRemoteJob() {
+    return remoteJob;
   }
 
-  public void setName(final String name) {
-    this.name = name;
+  public void setRemoteJob(final RemoteJob remoteJob) {
+    this.remoteJob = remoteJob;
   }
 
-  public String getUrl() {
-    return url;
+  public String getStatus() {
+    return status;
   }
 
-  public void setUrl(final String url) {
-    this.url = url;
+  public void setStatus(final String status) {
+    this.status = status;
   }
 
-  public String getDescription() {
-    return description;
-  }
-
-  public void setDescription(final String description) {
-    this.description = description;
-  }
-
-  public int compareTo(final RemoteJob other) {
+  public int compareTo(final RemoteJobImportStatus other) {
     if (this == other) {
       return 0;
     }
 
-    return name.compareTo(other.getName());
+    return remoteJob.compareTo(other.getRemoteJob());
   }
 
   @Override
@@ -90,21 +76,21 @@ public final class RemoteJob implements Comparable<RemoteJob> {
       return true;
     }
 
-    if (!(obj instanceof RemoteJob)) {
+    if (!(obj instanceof RemoteJobImportStatus)) {
       return false;
     }
 
-    return name.equals(((RemoteJob) obj).getName());
+    return remoteJob.equals(((RemoteJobImportStatus) obj).getRemoteJob());
   }
 
   @Override
   public int hashCode() {
-    return name.hashCode();
+    return remoteJob.hashCode();
   }
 
   @Override
   public String toString() {
-    return new StringBuilder().append("RemoteJob: ").append(name).append(", ").append(url).append(", ")
-        .append(description).toString();
+    return new StringBuilder().append("RemoteJobImportStatus: ").append(remoteJob).append(", ").append(status)
+        .toString();
   }
 }

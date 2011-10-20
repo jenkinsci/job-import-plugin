@@ -22,51 +22,40 @@
  * SOFTWARE.
  */
 
-package org.jenkins.ci.plugins.jobimport;
+package org.jenkins.ci.plugins.jobimport.util;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
-
-import org.apache.commons.io.IOUtils;
-
+import org.jenkins.ci.plugins.jobimport.action.Messages;
 /**
+ * Various utility functions for working with localized Messages.
+ * 
  * @author <a href="mailto:jieryn@gmail.com">Jesse Farinacci</a>
  * @since 1.0
  */
-public final class URLUtils {
-  public static String fetchUrl(final String url) throws MalformedURLException, IOException {
-    notNull(url);
-
-    return fetchUrl(new URL(url));
+public final class MessagesUtils {
+  public static String formatFailedDuplicateJobName() {
+    return Messages.Job_Import_Plugin_Import_Failed_Duplicate();
   }
 
-  public static String fetchUrl(final URL url) throws IOException {
-    notNull(url);
-
-    InputStream inputStream = null;
-
-    try {
-      inputStream = url.openStream();
-      return IOUtils.toString(inputStream);
-    }
-
-    finally {
-      IOUtils.closeQuietly(inputStream);
-    }
+  public static String formatFailedException(final Exception e) {
+    return formatFailedException(e.getMessage());
   }
 
-  public static void notNull(final Object object) {
-    if (object == null) {
-      throw new IllegalArgumentException();
-    }
+  public static String formatFailedException(final String message) {
+    return Messages.Job_Import_Plugin_Import_Failed_Exception(message);
+  }
+
+  public static String formatFailedNotAProject() {
+    return Messages.Job_Import_Plugin_Import_Failed_NotAProject();
+  }
+
+  public static String formatSuccess() {
+    return Messages.Job_Import_Plugin_Import_Success();
   }
 
   /**
    * Static-only access.
    */
-  private URLUtils() {
-    // static-only access
+  private MessagesUtils() {
+    /* static-only access */
   }
 }

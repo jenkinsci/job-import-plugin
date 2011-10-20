@@ -1,0 +1,261 @@
+<!--
+  The MIT License
+
+  Copyright (c) 2011, Jesse Farinacci, Manufacture Francaise des Pneumatiques Michelin,
+  Daniel Petisme
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+  THE SOFTWARE.
+-->
+
+<?jelly escape-by-default='false'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout"
+         xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+    ${it.checkCreateAndImportPermissions()}
+    <l:layout norefresh="true" title="${%Job.Import.Plugin.Title}">
+        <st:include page="/hudson/model/View/sidepanel.jelly"/>
+        <l:main-panel>
+            <style>
+                #tab {
+                margin: 10px 0;
+                text-align: center;
+                border-collapse: collapse;
+                border-bottom: 1px solid #999;
+                }
+
+                #tab th {
+                font-size: 13px;
+                font-weight: bold;
+                padding: 8px;
+                border: 1px solid #999;
+                }
+
+                #tab td {
+                padding: 8px;
+                border-left: 1px solid #999;
+                border-right: 1px solid #999;
+                }
+
+                #tab tbody tr:hover { background: #CCD9E3; border:1px solid #999}
+
+                .first_column{
+                padding: 3px;
+                width: 0px;
+                }
+
+                .name_column{
+                padding: 3px;
+                width: 20%;
+                }
+
+                .last_column{
+                padding: 3px;
+                width: 100%;
+                }
+
+                #title{
+                vertical-align:middle;
+                }
+
+                #wrapper{
+                font-size:10px;
+                width: 100%;
+                vertical-align:top;
+                }
+
+                #left{
+                float:left;
+                margin-left:25px;
+                margin-right:25px;
+                }
+
+                #right{
+                margin-left:25px;
+                }
+            </style>
+            <h1>${%Job.Import.Plugin.Title}</h1>
+            <h2>${%Job.Import.Plugin.Description}</h2>
+            <br/>
+            <f:form name="query" action="query" method="get">
+                <j:set var="displayError"
+                       value="${it.plugin.enableJenkinsList and it.plugin.jenkinsInstances.size() == 0}"/>
+                <j:choose>
+                    <j:when test="${displayError}">
+                        <div id="job-import-plugin-jenkinsInstances-empty">
+                            ${%Job.Import.Plugin.Query.Section.RemoteUrl.jenkinsInstances.Empty}
+                        </div>
+                    </j:when>
+                    <j:otherwise>
+                        <f:section title="${%Job.Import.Plugin.Query.Section.Title}">
+                            <j:choose>
+                                <j:when test="${it.plugin.enableJenkinsList}">
+                                    <f:entry title="${%Job.Import.Plugin.Query.Section.RemoteUrl.Title}"
+                                             help="/plugin/job-import-plugin/help/help-remoteUrl.html">
+                                        <select class="setting-input" name="remoteUrl">
+                                            <j:forEach var="jenkinsInstance"
+                                                       items="${it.plugin.jenkinsInstances}">
+                                                <f:option value="${jenkinsInstance.url}"
+                                                          selected="${jenkinsInstance.url == it.remoteUrl}">
+                                                    ${jenkinsInstance.url}
+                                                </f:option>
+                                            </j:forEach>
+                                        </select>
+                                    </f:entry>
+                                </j:when>
+                                <j:otherwise>
+                                    <f:entry title="${%Job.Import.Plugin.Query.Section.RemoteUrl.Title}"
+                                             help="/plugin/job-import-plugin/help/help-remoteUrl.html">
+                                        <f:textbox name="remoteUrl" value="${it.remoteUrl}"/>
+                                    </f:entry>
+                                </j:otherwise>
+                            </j:choose>
+
+                            <f:entry title="${%Job.Import.Plugin.Query.Section.RemoteUrl.Job.filter}"
+                                     help="/plugin/job-import-plugin/help/help-jobFilter.html">
+                                <f:textbox name="jobFilter" value="${it.jobFilter}"/>
+                            </f:entry>
+
+                            <!--f:validateButton title="${%Job.Import.Plugin.Query.Section.Validate.Title}" method="doTestConnection" with="remoteUrl"/-->
+                            <f:block>
+                                <input type="submit" value="${%Job.Import.Plugin.Query.Section.Submit.Name}"/>
+                            </f:block>
+                        </f:section>
+                    </j:otherwise>
+                </j:choose>
+
+            </f:form>
+            <j:if test="${it.remoteJobsAvailable}">
+                <j:if test="${!it.remoteJobsImportStatusAvailable}">
+                    <br/>
+                    <f:form name="import" action="import" method="post">
+                        <f:section title="${%Job.Import.Plugin.Import.Section.Title}">
+                            <f:block>
+                                <table id="tab" class="jobImportPlugin" cellpadding="3" cellspacing="3">
+                                    <thead>
+                                        <tr id="title">
+                                            <th scope="col" class="first_column">
+                                                ${%Job.Import.Plugin.Selection.Import?}
+                                            </th>
+                                            <th scope="col" class="name_column">${%Job.Import.Plugin.Selection.Name}</th>
+                                            <j:if test="${it.plugin.enableAdvancedOptions}">
+                                                <th scope="col">
+                                                    ${%Job.Import.Plugin.Selection.Rename}
+                                                </th>
+                                                <th scope="col" colspan="2">
+                                                    ${%Job.Import.Plugin.Selection.ApplyPattern}
+                                                    <br/>
+                                                    <div id="wrapper" align="center">
+                                                        <div id="left">
+                                                            ${%Job.Import.Plugin.Selection.PatternToMatch}
+                                                        </div>
+                                                        <div id="right">
+                                                            ${%Job.Import.Plugin.Selection.ReplaceWith}
+                                                        </div>
+                                                    </div>
+                                                </th>
+                                            </j:if>
+                                            <j:if test="${it.plugin.enableJobDescription}">
+                                                <th scope="col" class="last_column">
+                                                    ${%Job.Import.Plugin.Selection.Description}
+                                                </th>
+                                            </j:if>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <j:forEach var="job" items="${it.remoteJobs}">
+                                            <tr>
+                                                <td class="first_column">
+                                                    <f:checkbox name="job.url" value="${job.url}"
+                                                                id="checkbox-${job.url}"/>
+                                                </td>
+                                                <td class="name_column">
+                                                    <a target="_blank" href="${job.url}">${job.name}</a>
+                                                </td>
+                                                <j:if test="${it.plugin.enableAdvancedOptions}">
+                                                    <td>
+                                                        <input type="text" name="job.newName"
+                                                               disabled="disabled"/>
+                                                    </td>
+                                                    <td>
+                                                        <input type="text" name="job.patternToMatch"
+                                                               disabled="disabled"/>
+                                                    </td>
+                                                    <td>
+                                                        <input type="text" name="job.newValue"
+                                                               disabled="disabled"/>
+                                                    </td>
+                                                </j:if>
+                                                <j:if test="${it.plugin.enableJobDescription}">
+                                                    <td>${job.description}</td>
+                                                </j:if>
+                                            </tr>
+
+                                        </j:forEach>
+                                    </tbody>
+                                </table>
+                            </f:block>
+                            <f:block>
+                                <input type="submit" value="${%Job.Import.Plugin.Import.Section.Submit.Name}"/>
+                            </f:block>
+                        </f:section>
+                    </f:form>
+                    <script language="javascript">
+                        $$('#tab input[type="checkbox"]').invoke('observe','click',function() {
+
+                        var inputs = this.up('tr').getElementsBySelector('input[type="text"]')
+
+                        if (this.checked) {
+                        inputs.each(function(input){input.enable()});
+                        } else {
+                        inputs.each(function(input){input.disable()});
+                        }
+                        });
+                    </script>
+                </j:if>
+            </j:if>
+            <j:if test="${it.remoteJobsImportStatusAvailable}">
+                <br/>
+                <f:form name="clear" action="clear" method="post">
+                    <f:section title="${%Job.Import.Plugin.Status.Section.Title}">
+                        <f:block>
+                            <table class="jobImportPlugin" cellpadding="3" cellspacing="3">
+                                <tr>
+                                    <th>${%Job.Import.Plugin.Status.Name}</th>
+                                    <th>${%Job.Import.Plugin.Status.Status}</th>
+                                </tr>
+                                <j:forEach var="status" items="${it.remoteJobsImportStatus}">
+                                    <tr>
+                                        <td>
+                                            <a target="_blank" href="${rootUrl}/job/${status.key.name}">
+                                                ${status.key.name}
+                                            </a>
+                                        </td>
+                                        <td>${status.value.status}</td>
+                                    </tr>
+                                </j:forEach>
+                            </table>
+                        </f:block>
+                        <f:block>
+                            <input type="submit" value="${%Job.Import.Plugin.Status.Section.Submit.Name}"/>
+                        </f:block>
+                    </f:section>
+                </f:form>
+            </j:if>
+        </l:main-panel>
+    </l:layout>
+</j:jelly>

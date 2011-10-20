@@ -1,7 +1,8 @@
 /*
  * The MIT License
  * 
- * Copyright (c) 2011, Jesse Farinacci
+ * Copyright (c) 2011, Jesse Farinacci, Manufacture Francaise des Pneumatiques Michelin,
+ * Daniel Petisme
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,14 +23,14 @@
  * SOFTWARE.
  */
 
-package org.jenkins.ci.plugins.jobimport;
+package org.jenkins.ci.plugins.jobimport.util;
 
 import java.io.IOException;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
+import org.jenkins.ci.plugins.jobimport.model.RemoteJob;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
@@ -156,7 +157,7 @@ public final class RemoteJobUtils {
         XPathUtils.evaluateStringXPath(document, XPATH_EXPRESSION_MAVEN_MODULE_SET_DESCRIPTION));
   }
 
-  public static SortedSet<RemoteJob> fromXml(final String xml) throws XPathExpressionException, SAXException,
+  public static SortedSet<RemoteJob> fromXml(String xml) throws XPathExpressionException, SAXException,
       IOException, ParserConfigurationException {
     final SortedSet<RemoteJob> remoteJobs = new TreeSet<RemoteJob>();
 
@@ -165,6 +166,9 @@ public final class RemoteJobUtils {
     }
 
     // ---
+
+    // remove xml header
+    xml = StringUtils.remove(xml, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
 
     if (xml.startsWith("<hudson>")) {
       remoteJobs.addAll(fromHudsonXml(xml));

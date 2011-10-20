@@ -1,7 +1,8 @@
 /*
  * The MIT License
  * 
- * Copyright (c) 2011, Jesse Farinacci
+ * Copyright (c) 2011, Jesse Farinacci, Manufacture Francaise des Pneumatiques Michelin,
+ * Daniel Petisme
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,7 +23,7 @@
  * SOFTWARE.
  */
 
-package org.jenkins.ci.plugins.jobimport;
+package org.jenkins.ci.plugins.jobimport.util;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -42,6 +43,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+
+import static org.apache.commons.lang.Validate.notNull;
 
 /**
  * @author <a href="mailto:jieryn@gmail.com">Jesse Farinacci</a>
@@ -110,12 +113,6 @@ public final class XPathUtils {
     notNull(expression);
 
     return (String) expression.evaluate(document, XPathConstants.STRING);
-  }
-
-  public static void notNull(final Object object) {
-    if (object == null) {
-      throw new IllegalArgumentException();
-    }
   }
 
   public static Document parse(final InputStream inputStream) throws SAXException, IOException,
