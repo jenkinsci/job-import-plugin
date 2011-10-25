@@ -24,6 +24,9 @@
 
 package org.jenkins.ci.plugins.jobimport.model;
 
+import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang.StringUtils;
+
 /**
  * @author <a href="mailto:jieryn@gmail.com">Jesse Farinacci</a>
  * @since 1.0
@@ -49,7 +52,7 @@ public final class RemoteJob implements Comparable<RemoteJob> {
     super();
     this.name = name;
     this.url = url;
-    this.description = description;
+    this.description = cleanRemoteString(description);
   }
 
   public String getName() {
@@ -73,7 +76,7 @@ public final class RemoteJob implements Comparable<RemoteJob> {
   }
 
   public void setDescription(final String description) {
-    this.description = description;
+    this.description = cleanRemoteString(description);
   }
 
   public int compareTo(final RemoteJob other) {
@@ -106,5 +109,11 @@ public final class RemoteJob implements Comparable<RemoteJob> {
   public String toString() {
     return new StringBuilder().append("RemoteJob: ").append(name).append(", ").append(url).append(", ")
         .append(description).toString();
+  }
+  
+  protected static final int MAX_STRLEN = 4096;
+  
+  protected static final String cleanRemoteString(final String string) {
+    return StringUtils.substring(StringEscapeUtils.escapeHtml(string), 0, MAX_STRLEN);
   }
 }
