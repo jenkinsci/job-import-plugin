@@ -155,6 +155,10 @@ public final class JobImportAction implements RootAction {
       return true;
     }
 
+    if (configXml.contains("<matrix-project>")) {
+        return true;
+      }
+
     return false;
   }
 
