@@ -27,6 +27,7 @@ package org.jenkins.ci.plugins.jobimport;
 import hudson.Extension;
 import hudson.model.RootAction;
 import hudson.model.Hudson;
+import hudson.model.TopLevelItem;
 import hudson.util.FormValidation;
 
 import java.io.IOException;
@@ -123,7 +124,10 @@ public final class JobImportAction implements RootAction {
                 remoteJobsImportStatus.get(remoteJob).setStatus(MessagesUtils.formatFailedException(e));
 
                 try {
-                  Hudson.getInstance().getItem(remoteJob.getName()).delete();
+                    TopLevelItem created = Hudson.getInstance().getItem(remoteJob.getName());
+                    if (created != null) {
+                        created.delete();
+                    }
                 }
                 catch (final InterruptedException e2) {
                   // do nothing
