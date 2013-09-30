@@ -82,10 +82,6 @@
   </pluginRepositories>
 
   <distributionManagement>
-    <repository>
-      <id>java.net-m2-repository</id>
-      <url>http://maven.hudson-labs.org:8081/content/repositories/releases/</url>
-    </repository>
     <site>
       <id>github-project-site</id>
       <url>gitsite:git@github.com/jenkinsci/job-import-plugin</url>
