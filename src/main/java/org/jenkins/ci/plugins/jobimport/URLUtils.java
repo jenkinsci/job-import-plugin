@@ -28,6 +28,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLConnection;
+import javax.xml.bind.DatatypeConverter;
 
 import org.apache.commons.io.IOUtils;
 
@@ -36,26 +38,21 @@ import org.apache.commons.io.IOUtils;
  * @since 1.0
  */
 public final class URLUtils {
-  public static String fetchUrl(final String url) throws MalformedURLException, IOException {
-    notNull(url);
-
-    return fetchUrl(new URL(url));
-  }
-
-  public static String fetchUrl(final URL url) throws IOException {
-    notNull(url);
-
-    InputStream inputStream = null;
-
-    try {
-      inputStream = url.openStream();
-      return IOUtils.toString(inputStream);
+    public static String fetchUrl(String url, String username, String password) throws MalformedURLException, IOException {
+        notNull(url);
+        notNull(username);
+        notNull(password);
+        URLConnection conn = new URL(url).openConnection();
+        if (!username.isEmpty()) {
+            conn.setRequestProperty("Authorization", "Basic " + DatatypeConverter.printBase64Binary((username + ":" + password).getBytes()));
+        }
+        InputStream is = conn.getInputStream();
+        try {
+            return IOUtils.toString(is);
+        } finally {
+            is.close();
+        }
     }
-
-    finally {
-      IOUtils.closeQuietly(inputStream);
-    }
-  }
 
   public static void notNull(final Object object) {
     if (object == null) {

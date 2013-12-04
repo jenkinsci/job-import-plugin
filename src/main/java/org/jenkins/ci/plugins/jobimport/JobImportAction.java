@@ -32,7 +32,6 @@ import hudson.util.FormValidation;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.util.Arrays;
 import java.util.SortedMap;
 import java.util.SortedSet;
@@ -42,15 +41,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.servlet.ServletException;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.xpath.XPathExpressionException;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
-import org.xml.sax.SAXException;
 
 /**
  * @author <a href="mailto:jieryn@gmail.com">Jesse Farinacci</a>
@@ -64,6 +60,7 @@ public final class JobImportAction implements RootAction {
                                                                                            .getName());
 
   private String                                            remoteUrl;
+  private String username, password;
 
   private final SortedSet<RemoteJob>                        remoteJobs             = new TreeSet<RemoteJob>();
 
@@ -72,6 +69,7 @@ public final class JobImportAction implements RootAction {
   public void doClear(final StaplerRequest request, final StaplerResponse response) throws ServletException,
       IOException {
     remoteUrl = null;
+    username = password = null;
     remoteJobs.clear();
     remoteJobsImportStatus.clear();
     response.sendRedirect(Hudson.getInstance().getRootUrl());
@@ -100,7 +98,7 @@ public final class JobImportAction implements RootAction {
               InputStream inputStream = null;
 
               try {
-                final String configXml = URLUtils.fetchUrl(remoteJob.getUrl() + "/config.xml");
+                final String configXml = URLUtils.fetchUrl(remoteJob.getUrl() + "/config.xml", username, password);
 
                 if (isValidProject(configXml)) {
                   inputStream = IOUtils.toInputStream(configXml);
@@ -167,31 +165,17 @@ public final class JobImportAction implements RootAction {
     remoteJobs.clear();
     remoteJobsImportStatus.clear();
     remoteUrl = request.getParameter("remoteUrl");
+    username = request.getParameter("username");
+    password = request.getParameter("password");
 
     try {
       if (StringUtils.isNotEmpty(remoteUrl)) {
-        remoteJobs.addAll(RemoteJobUtils.fromXml(URLUtils.fetchUrl(remoteUrl + "/api/xml")));
+        remoteJobs.addAll(RemoteJobUtils.fromXml(URLUtils.fetchUrl(remoteUrl + "/api/xml", username, password), username, password));
       }
     }
 
-    catch (final XPathExpressionException e) {
-      // fall through
-    }
-
-    catch (final MalformedURLException e) {
-      // fall through
-    }
-
-    catch (final SAXException e) {
-      // fall through
-    }
-
-    catch (final IOException e) {
-      // fall through
-    }
-
-    catch (final ParserConfigurationException e) {
-      // fall through
+    catch (Exception e) {
+        e.printStackTrace();
     }
 
     response.forwardToPreviousPage(request);
@@ -232,6 +216,12 @@ public final class JobImportAction implements RootAction {
   public String getRemoteUrl() {
     return remoteUrl;
   }
+    public String getUsername() {
+        return username;
+    }
+    public String getPassword() {
+        return password;
+    }
 
   public String getUrlName() {
     return "/job-import";

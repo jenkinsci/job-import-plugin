@@ -97,7 +97,7 @@ public final class RemoteJobUtils {
         XPathUtils.evaluateStringXPath(document, XPATH_EXPRESSION_FREE_STYLE_PROJECT_DESCRIPTION));
   }
 
-  protected static SortedSet<RemoteJob> fromHudsonXml(final String xml) throws SAXException, IOException,
+  protected static SortedSet<RemoteJob> fromHudsonXml(String xml, String username, String password) throws SAXException, IOException,
       ParserConfigurationException, XPathExpressionException {
     final SortedSet<RemoteJob> remoteJobs = new TreeSet<RemoteJob>();
 
@@ -112,13 +112,13 @@ public final class RemoteJobUtils {
     final Document document = XPathUtils.parse(xml);
 
     for (final String jobUrl : XPathUtils.evaluateNodeListTextXPath(document, XPATH_EXPRESSION_HUDSON_JOB_URL)) {
-      remoteJobs.addAll(fromXml(URLUtils.fetchUrl(jobUrl + "/api/xml")));
+      remoteJobs.addAll(fromXml(URLUtils.fetchUrl(jobUrl + "/api/xml", username, password), username, password));
     }
 
     return remoteJobs;
   }
 
-  protected static SortedSet<RemoteJob> fromListViewXml(final String xml) throws SAXException, IOException,
+  protected static SortedSet<RemoteJob> fromListViewXml(String xml, String username, String password) throws SAXException, IOException,
       ParserConfigurationException, XPathExpressionException {
     final SortedSet<RemoteJob> remoteJobs = new TreeSet<RemoteJob>();
 
@@ -133,7 +133,7 @@ public final class RemoteJobUtils {
     final Document document = XPathUtils.parse(xml);
 
     for (final String jobUrl : XPathUtils.evaluateNodeListTextXPath(document, XPATH_EXPRESSION_LIST_VIEW_JOB_URL)) {
-      remoteJobs.addAll(fromXml(URLUtils.fetchUrl(jobUrl + "/api/xml")));
+      remoteJobs.addAll(fromXml(URLUtils.fetchUrl(jobUrl + "/api/xml", username, password), username, password));
     }
 
     return remoteJobs;
@@ -156,7 +156,7 @@ public final class RemoteJobUtils {
         XPathUtils.evaluateStringXPath(document, XPATH_EXPRESSION_MAVEN_MODULE_SET_DESCRIPTION));
   }
 
-  public static SortedSet<RemoteJob> fromXml(final String xml) throws XPathExpressionException, SAXException,
+  public static SortedSet<RemoteJob> fromXml(String xml, String username, String password) throws XPathExpressionException, SAXException,
       IOException, ParserConfigurationException {
     final SortedSet<RemoteJob> remoteJobs = new TreeSet<RemoteJob>();
 
@@ -167,7 +167,7 @@ public final class RemoteJobUtils {
     // ---
 
     if (xml.startsWith("<hudson>")) {
-      remoteJobs.addAll(fromHudsonXml(xml));
+      remoteJobs.addAll(fromHudsonXml(xml, username, password));
     }
 
     else if (xml.startsWith("<freeStyleProject>")) {
@@ -175,7 +175,7 @@ public final class RemoteJobUtils {
     }
 
     else if (xml.startsWith("<listView>")) {
-      remoteJobs.addAll(fromListViewXml(xml));
+      remoteJobs.addAll(fromListViewXml(xml, username, password));
     }
 
     else if (xml.startsWith("<mavenModuleSet>")) {
