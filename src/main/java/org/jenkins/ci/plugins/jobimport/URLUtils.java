@@ -31,14 +31,13 @@ import java.net.URL;
 import java.net.URLConnection;
 import javax.xml.bind.DatatypeConverter;
 
-import org.apache.commons.io.IOUtils;
 
 /**
  * @author <a href="mailto:jieryn@gmail.com">Jesse Farinacci</a>
  * @since 1.0
  */
 public final class URLUtils {
-    public static String fetchUrl(String url, String username, String password) throws MalformedURLException, IOException {
+    public static InputStream fetchUrl(String url, String username, String password) throws MalformedURLException, IOException {
         notNull(url);
         notNull(username);
         notNull(password);
@@ -46,12 +45,7 @@ public final class URLUtils {
         if (!username.isEmpty()) {
             conn.setRequestProperty("Authorization", "Basic " + DatatypeConverter.printBase64Binary((username + ":" + password).getBytes()));
         }
-        InputStream is = conn.getInputStream();
-        try {
-            return IOUtils.toString(is);
-        } finally {
-            is.close();
-        }
+        return conn.getInputStream();
     }
 
   public static void notNull(final Object object) {

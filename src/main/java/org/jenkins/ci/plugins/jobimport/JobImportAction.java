@@ -25,11 +25,10 @@
 package org.jenkins.ci.plugins.jobimport;
 
 import hudson.Extension;
-import hudson.model.RootAction;
 import hudson.model.Hudson;
+import hudson.model.RootAction;
 import hudson.model.TopLevelItem;
 import hudson.util.FormValidation;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
@@ -39,14 +38,16 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import javax.servlet.ServletException;
-
+import javax.xml.parsers.DocumentBuilderFactory;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 
 /**
  * @author <a href="mailto:jieryn@gmail.com">Jesse Farinacci</a>
@@ -98,9 +99,7 @@ public final class JobImportAction implements RootAction {
               InputStream inputStream = null;
 
               try {
-                final String configXml = URLUtils.fetchUrl(remoteJob.getUrl() + "/config.xml", username, password);
-
-                  inputStream = IOUtils.toInputStream(configXml);
+                  inputStream = URLUtils.fetchUrl(remoteJob.getUrl() + "/config.xml", username, password);
                   Hudson.getInstance().createProjectFromXML(remoteJob.getName(), inputStream);
                   remoteJobsImportStatus.get(remoteJob).setStatus(MessagesUtils.formatSuccess());
               }
@@ -148,7 +147,13 @@ public final class JobImportAction implements RootAction {
 
     try {
       if (StringUtils.isNotEmpty(remoteUrl)) {
-        remoteJobs.addAll(RemoteJobUtils.fromXml(URLUtils.fetchUrl(remoteUrl + "/api/xml", username, password), username, password));
+          Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(URLUtils.fetchUrl(remoteUrl + "/api/xml?tree=jobs[name,url,description]", username, password));
+          NodeList nl = doc.getElementsByTagName("job");
+          for (int i = 0; i < nl.getLength(); i++) {
+              Element job = (Element) nl.item(i);
+              String desc = text(job, "description");
+              remoteJobs.add(new RemoteJob(text(job, "name"), text(job, "url"), desc != null ? desc : ""));
+          }
       }
     }
 
@@ -157,6 +162,15 @@ public final class JobImportAction implements RootAction {
     }
 
     response.forwardToPreviousPage(request);
+  }
+  private static String text(Element e, String name) {
+      NodeList nl = e.getElementsByTagName(name);
+      if (nl.getLength() == 1) {
+          Element e2 = (Element) nl.item(0);
+          return e2.getTextContent();
+      } else {
+          return null;
+      }
   }
 
   public FormValidation doTestConnection(@QueryParameter("remoteUrl") final String remoteUrl) {
