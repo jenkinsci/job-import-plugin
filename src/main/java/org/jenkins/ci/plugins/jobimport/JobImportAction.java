@@ -100,15 +100,9 @@ public final class JobImportAction implements RootAction {
               try {
                 final String configXml = URLUtils.fetchUrl(remoteJob.getUrl() + "/config.xml", username, password);
 
-                if (isValidProject(configXml)) {
                   inputStream = IOUtils.toInputStream(configXml);
                   Hudson.getInstance().createProjectFromXML(remoteJob.getName(), inputStream);
                   remoteJobsImportStatus.get(remoteJob).setStatus(MessagesUtils.formatSuccess());
-                }
-
-                else {
-                  remoteJobsImportStatus.get(remoteJob).setStatus(MessagesUtils.formatFailedNotAProject());
-                }
               }
 
               catch (final Exception e) {
@@ -142,22 +136,6 @@ public final class JobImportAction implements RootAction {
     }
 
     response.forwardToPreviousPage(request);
-  }
-
-  private boolean isValidProject(final String configXml) {
-    if (StringUtils.isEmpty(configXml)) {
-      return false;
-    }
-
-    if (configXml.contains("<project>")) {
-      return true;
-    }
-
-    if (configXml.contains("<maven2-moduleset>")) {
-      return true;
-    }
-
-    return false;
   }
 
   public void doQuery(final StaplerRequest request, final StaplerResponse response) throws ServletException,
