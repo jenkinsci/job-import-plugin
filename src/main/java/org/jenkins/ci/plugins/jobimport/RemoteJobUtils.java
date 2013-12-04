@@ -62,6 +62,12 @@ public final class RemoteJobUtils {
 
   private static final XPathExpression XPATH_EXPRESSION_MAVEN_MODULE_SET_URL;
 
+  private static final XPathExpression XPATH_EXPRESSION_MATRIX_PROJECT_NAME;
+
+  private static final XPathExpression XPATH_EXPRESSION_MATRIX_PROJECT_URL;
+
+  private static final XPathExpression XPATH_EXPRESSION_MATRIX_PROJECT_DESCRIPTION;
+
   static {
     try {
       XPATH_EXPRESSION_FREE_STYLE_PROJECT_DESCRIPTION = XPathUtils.compile("/freeStyleProject/description");
@@ -72,6 +78,9 @@ public final class RemoteJobUtils {
       XPATH_EXPRESSION_MAVEN_MODULE_SET_DESCRIPTION = XPathUtils.compile("/mavenModuleSet/description");
       XPATH_EXPRESSION_MAVEN_MODULE_SET_NAME = XPathUtils.compile("/mavenModuleSet/name");
       XPATH_EXPRESSION_MAVEN_MODULE_SET_URL = XPathUtils.compile("/mavenModuleSet/url");
+      XPATH_EXPRESSION_MATRIX_PROJECT_NAME = XPathUtils.compile("/matrixProject/name");
+      XPATH_EXPRESSION_MATRIX_PROJECT_URL = XPathUtils.compile("/matrixProject/url");
+      XPATH_EXPRESSION_MATRIX_PROJECT_DESCRIPTION =  XPathUtils.compile("/matrixProject/description");;
     }
 
     catch (final XPathExpressionException e) {
@@ -156,6 +165,23 @@ public final class RemoteJobUtils {
         XPathUtils.evaluateStringXPath(document, XPATH_EXPRESSION_MAVEN_MODULE_SET_DESCRIPTION));
   }
 
+  protected static RemoteJob fromMatrixProjectXml(final String xml) throws SAXException, IOException,
+  ParserConfigurationException, XPathExpressionException {
+    if (StringUtils.isEmpty(xml)) {
+      return null;
+    }
+    
+    if (!xml.startsWith("<matrixProject>")) {
+      return null;
+    }
+    
+    final Document document = XPathUtils.parse(xml);
+    
+    return new RemoteJob(XPathUtils.evaluateStringXPath(document, XPATH_EXPRESSION_MATRIX_PROJECT_NAME),
+        XPathUtils.evaluateStringXPath(document, XPATH_EXPRESSION_MATRIX_PROJECT_URL),
+        XPathUtils.evaluateStringXPath(document, XPATH_EXPRESSION_MATRIX_PROJECT_DESCRIPTION));
+  }
+
   public static SortedSet<RemoteJob> fromXml(final String xml) throws XPathExpressionException, SAXException,
       IOException, ParserConfigurationException {
     final SortedSet<RemoteJob> remoteJobs = new TreeSet<RemoteJob>();
@@ -180,6 +206,10 @@ public final class RemoteJobUtils {
 
     else if (xml.startsWith("<mavenModuleSet>")) {
       remoteJobs.add(fromMavenModuleSetXml(xml));
+    }
+
+    else if (xml.startsWith("<matrixProject>")) {
+      remoteJobs.add(fromMatrixProjectXml(xml));
     }
 
     return remoteJobs;
