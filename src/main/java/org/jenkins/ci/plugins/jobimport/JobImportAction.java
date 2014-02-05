@@ -24,10 +24,9 @@
 
 package org.jenkins.ci.plugins.jobimport;
 
-import hudson.Extension;
-import hudson.model.Hudson;
-import hudson.model.RootAction;
+import hudson.model.Action;
 import hudson.model.TopLevelItem;
+import hudson.model.Hudson;
 import hudson.util.FormValidation;
 
 import java.io.IOException;
@@ -58,11 +57,9 @@ import org.w3c.dom.NodeList;
  * @author <a href="mailto:jieryn@gmail.com">Jesse Farinacci</a>
  * @since 1.0
  */
-@Extension
-public final class JobImportAction implements RootAction {
+public class JobImportAction implements Action {
 
-	private static final Logger LOG = Logger.getLogger(JobImportAction.class
-			.getName());
+	private static final Logger LOG = Logger.getLogger(JobImportAction.class.getName());
 
 	private String remoteUrl;
 	private String username, password;
@@ -166,29 +163,6 @@ public final class JobImportAction implements RootAction {
 		username = request.getParameter("username");
 		password = request.getParameter("password");
 		showAllJobs(remoteUrl, new ArrayList<RemoteJob>());
-		/*
-		try {
-			if (StringUtils.isNotEmpty(remoteUrl)) {
-				Document doc = DocumentBuilderFactory
-						.newInstance()
-						.newDocumentBuilder()
-						.parse(URLUtils.fetchUrl(remoteUrl
-								+ "/api/xml?tree=jobs[name,url,description]",
-								username, password));
-				NodeList nl = doc.getElementsByTagName("job");
-				for (int i = 0; i < nl.getLength(); i++) {
-					Element job = (Element) nl.item(i);
-					String desc = text(job, "description");
-					remoteJobs.add(new RemoteJob(text(job, "name"), text(job,
-							"url"), desc != null ? desc : ""));
-				}
-			}
-		}
-
-		catch (Exception e) {
-			e.printStackTrace();
-		}
-		*/
 		response.forwardToPreviousPage(request);
 	}
 
