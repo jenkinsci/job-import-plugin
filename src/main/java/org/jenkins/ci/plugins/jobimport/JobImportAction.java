@@ -29,19 +29,25 @@ import hudson.model.Hudson;
 import hudson.model.RootAction;
 import hudson.model.TopLevelItem;
 import hudson.util.FormValidation;
+
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import javax.servlet.ServletException;
 import javax.xml.parsers.DocumentBuilderFactory;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
+import org.jfree.util.Log;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
@@ -56,178 +62,255 @@ import org.w3c.dom.NodeList;
 @Extension
 public final class JobImportAction implements RootAction {
 
-  private static final Logger                               LOG                    = Logger
-                                                                                       .getLogger(JobImportAction.class
-                                                                                           .getName());
+	private static final Logger LOG = Logger.getLogger(JobImportAction.class
+			.getName());
 
-  private String                                            remoteUrl;
-  private String username, password;
+	private String remoteUrl;
+	private String username, password;
 
-  private final SortedSet<RemoteJob>                        remoteJobs             = new TreeSet<RemoteJob>();
+	private final SortedSet<RemoteJob> remoteJobs = new TreeSet<RemoteJob>();
 
-  private final SortedMap<RemoteJob, RemoteJobImportStatus> remoteJobsImportStatus = new TreeMap<RemoteJob, RemoteJobImportStatus>();
+	private final SortedMap<RemoteJob, RemoteJobImportStatus> remoteJobsImportStatus = new TreeMap<RemoteJob, RemoteJobImportStatus>();
 
-  public void doClear(final StaplerRequest request, final StaplerResponse response) throws ServletException,
-      IOException {
-    remoteUrl = null;
-    username = password = null;
-    remoteJobs.clear();
-    remoteJobsImportStatus.clear();
-    response.sendRedirect(Hudson.getInstance().getRootUrl());
-  }
+	public void doClear(final StaplerRequest request,
+			final StaplerResponse response) throws ServletException,
+			IOException {
+		remoteUrl = null;
+		username = password = null;
+		remoteJobs.clear();
+		remoteJobsImportStatus.clear();
+		response.sendRedirect(Hudson.getInstance().getRootUrl());
+	}
 
-  public void doImport(final StaplerRequest request, final StaplerResponse response) throws ServletException,
-      IOException {
-    remoteJobsImportStatus.clear();
+	public void doImport(final StaplerRequest request,
+			final StaplerResponse response) throws ServletException,
+			IOException {
+		remoteJobsImportStatus.clear();
 
-    if (isRemoteJobsAvailable()) {
-      if (request.hasParameter("jobUrl")) {
-        for (final String jobUrl : Arrays.asList(request.getParameterValues("jobUrl"))) {
-          final RemoteJob remoteJob = getRemoteJobs(jobUrl);
-          if (remoteJob != null) {
-            if (!remoteJobsImportStatus.containsKey(remoteJob)) {
-              remoteJobsImportStatus.put(remoteJob, new RemoteJobImportStatus(remoteJob));
-            }
+		if (isRemoteJobsAvailable()) {
+			if (request.hasParameter("jobUrl")) {
+				for (final String jobUrl : Arrays.asList(request
+						.getParameterValues("jobUrl"))) {
+					final RemoteJob remoteJob = getRemoteJobs(jobUrl);
+					if (remoteJob != null) {
+						if (!remoteJobsImportStatus.containsKey(remoteJob)) {
+							remoteJobsImportStatus.put(remoteJob,
+									new RemoteJobImportStatus(remoteJob));
+						}
 
-            // ---
+						// ---
 
-            if (Hudson.getInstance().getItem(remoteJob.getName()) != null) {
-              remoteJobsImportStatus.get(remoteJob).setStatus(MessagesUtils.formatFailedDuplicateJobName());
-            }
+						if (Hudson.getInstance().getItem(remoteJob.getName()) != null) {
+							remoteJobsImportStatus.get(remoteJob).setStatus(
+									MessagesUtils
+											.formatFailedDuplicateJobName());
+						}
 
-            else {
-              InputStream inputStream = null;
+						else {
+							InputStream inputStream = null;
 
-              try {
-                  inputStream = URLUtils.fetchUrl(remoteJob.getUrl() + "/config.xml", username, password);
-                  Hudson.getInstance().createProjectFromXML(remoteJob.getName(), inputStream);
-                  remoteJobsImportStatus.get(remoteJob).setStatus(MessagesUtils.formatSuccess());
-              }
+							try {
+								inputStream = URLUtils.fetchUrl(
+										remoteJob.getUrl() + "/config.xml",
+										username, password);
+								Hudson.getInstance().createProjectFromXML(
+										remoteJob.getName(), inputStream);
+								remoteJobsImportStatus.get(remoteJob)
+										.setStatus(
+												MessagesUtils.formatSuccess());
+							}
 
-              catch (final Exception e) {
-                LOG.warning("Job Import Failed: " + e.getMessage());
-                if (LOG.isLoggable(Level.INFO)) {
-                  LOG.log(Level.INFO, e.getMessage(), e);
-                }
+							catch (final Exception e) {
+								LOG.warning("Job Import Failed: "
+										+ e.getMessage());
+								if (LOG.isLoggable(Level.INFO)) {
+									LOG.log(Level.INFO, e.getMessage(), e);
+								}
 
-                // ---
+								// ---
 
-                remoteJobsImportStatus.get(remoteJob).setStatus(MessagesUtils.formatFailedException(e));
+								remoteJobsImportStatus
+										.get(remoteJob)
+										.setStatus(
+												MessagesUtils
+														.formatFailedException(e));
 
-                try {
-                    TopLevelItem created = Hudson.getInstance().getItem(remoteJob.getName());
-                    if (created != null) {
-                        created.delete();
-                    }
-                }
-                catch (final InterruptedException e2) {
-                  // do nothing
-                }
-              }
+								try {
+									TopLevelItem created = Hudson.getInstance()
+											.getItem(remoteJob.getName());
+									if (created != null) {
+										created.delete();
+									}
+								} catch (final InterruptedException e2) {
+									// do nothing
+								}
+							}
 
-              finally {
-                IOUtils.closeQuietly(inputStream);
-              }
-            }
-          }
-        }
-      }
-    }
+							finally {
+								IOUtils.closeQuietly(inputStream);
+							}
+						}
+					}
+				}
+			}
+		}
 
-    response.forwardToPreviousPage(request);
-  }
+		response.forwardToPreviousPage(request);
+	}
 
-  public void doQuery(final StaplerRequest request, final StaplerResponse response) throws ServletException,
-      IOException {
-    remoteJobs.clear();
-    remoteJobsImportStatus.clear();
-    remoteUrl = request.getParameter("remoteUrl");
-    username = request.getParameter("username");
-    password = request.getParameter("password");
+	public void doQuery(final StaplerRequest request,
+			final StaplerResponse response) throws ServletException,
+			IOException {
+		remoteJobs.clear();
+		remoteJobsImportStatus.clear();
+		remoteUrl = request.getParameter("remoteUrl");
+		username = request.getParameter("username");
+		password = request.getParameter("password");
+		showAllJobs(remoteUrl, new ArrayList<RemoteJob>());
+		/*
+		try {
+			if (StringUtils.isNotEmpty(remoteUrl)) {
+				Document doc = DocumentBuilderFactory
+						.newInstance()
+						.newDocumentBuilder()
+						.parse(URLUtils.fetchUrl(remoteUrl
+								+ "/api/xml?tree=jobs[name,url,description]",
+								username, password));
+				NodeList nl = doc.getElementsByTagName("job");
+				for (int i = 0; i < nl.getLength(); i++) {
+					Element job = (Element) nl.item(i);
+					String desc = text(job, "description");
+					remoteJobs.add(new RemoteJob(text(job, "name"), text(job,
+							"url"), desc != null ? desc : ""));
+				}
+			}
+		}
 
-    try {
-      if (StringUtils.isNotEmpty(remoteUrl)) {
-          Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(URLUtils.fetchUrl(remoteUrl + "/api/xml?tree=jobs[name,url,description]", username, password));
-          NodeList nl = doc.getElementsByTagName("job");
-          for (int i = 0; i < nl.getLength(); i++) {
-              Element job = (Element) nl.item(i);
-              String desc = text(job, "description");
-              remoteJobs.add(new RemoteJob(text(job, "name"), text(job, "url"), desc != null ? desc : ""));
-          }
-      }
-    }
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+		*/
+		response.forwardToPreviousPage(request);
+	}
 
-    catch (Exception e) {
-        e.printStackTrace();
-    }
+	private static String text(Element e, String name) {
+		NodeList nl = e.getElementsByTagName(name);
+		if (nl.getLength() == 1) {
+			Element e2 = (Element) nl.item(0);
+			return e2.getTextContent();
+		} else {
+			return null;
+		}
+	}
 
-    response.forwardToPreviousPage(request);
-  }
-  private static String text(Element e, String name) {
-      NodeList nl = e.getElementsByTagName(name);
-      if (nl.getLength() == 1) {
-          Element e2 = (Element) nl.item(0);
-          return e2.getTextContent();
-      } else {
-          return null;
-      }
-  }
+	public FormValidation doTestConnection(
+			@QueryParameter("remoteUrl") final String remoteUrl) {
+		return FormValidation.ok();
+	}
 
-  public FormValidation doTestConnection(@QueryParameter("remoteUrl") final String remoteUrl) {
-    return FormValidation.ok();
-  }
+	public String getDisplayName() {
+		return Messages.DisplayName();
+	}
 
-  public String getDisplayName() {
-    return Messages.DisplayName();
-  }
+	public String getIconFileName() {
+		return "/images/32x32/setting.png";
+	}
 
-  public String getIconFileName() {
-    return "/images/32x32/setting.png";
-  }
+	public SortedSet<RemoteJob> getRemoteJobs() {
+		return remoteJobs;
+	}
 
-  public SortedSet<RemoteJob> getRemoteJobs() {
-    return remoteJobs;
-  }
+	private RemoteJob getRemoteJobs(final String jobUrl) {
+		if (StringUtils.isNotEmpty(jobUrl)) {
+			for (final RemoteJob remoteJob : remoteJobs) {
+				if (jobUrl.equals(remoteJob.getUrl())) {
+					return remoteJob;
+				}
+			}
+		}
 
-  private RemoteJob getRemoteJobs(final String jobUrl) {
-    if (StringUtils.isNotEmpty(jobUrl)) {
-      for (final RemoteJob remoteJob : remoteJobs) {
-        if (jobUrl.equals(remoteJob.getUrl())) {
-          return remoteJob;
-        }
-      }
-    }
+		return null;
+	}
 
-    return null;
-  }
+	public SortedMap<RemoteJob, RemoteJobImportStatus> getRemoteJobsImportStatus() {
+		return remoteJobsImportStatus;
+	}
 
-  public SortedMap<RemoteJob, RemoteJobImportStatus> getRemoteJobsImportStatus() {
-    return remoteJobsImportStatus;
-  }
+	public String getRemoteUrl() {
+		return remoteUrl;
+	}
 
-  public String getRemoteUrl() {
-    return remoteUrl;
-  }
-    public String getUsername() {
-        return username;
-    }
-    public String getPassword() {
-        return password;
-    }
+	public String getUsername() {
+		return username;
+	}
 
-  public String getUrlName() {
-    return "/job-import";
-  }
+	public String getPassword() {
+		return password;
+	}
 
-  public boolean isRemoteJobsAvailable() {
-    return remoteJobs.size() > 0;
-  }
+	public String getUrlName() {
+		return "/job-import";
+	}
 
-  public boolean isRemoteJobsImportStatusAvailable() {
-    return remoteJobsImportStatus.size() > 0;
-  }
+	public boolean isRemoteJobsAvailable() {
+		return remoteJobs.size() > 0;
+	}
 
-  public void setRemoteUrl(final String remoteUrl) {
-    this.remoteUrl = remoteUrl;
-  }
+	public boolean isRemoteJobsImportStatusAvailable() {
+		return remoteJobsImportStatus.size() > 0;
+	}
+
+	public void setRemoteUrl(final String remoteUrl) {
+		this.remoteUrl = remoteUrl;
+	}
+	
+	
+	
+	/**
+	 * method that will display all remote jobs with their full path(cloudbees folders)
+	 */
+	public void showAllJobs(String remoteURL, List<RemoteJob> remoteJobs) {
+		try{
+			if(!remoteURL.endsWith("/")) remoteURL = remoteURL + "/";
+			Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder()
+					.parse(URLUtils.fetchUrl(remoteURL + "api/xml?tree=jobs[name,url,description]",
+							username, password));
+			List<RemoteJob> result = fromNodeListToList(doc.getElementsByTagName("job"));
+			if(result.size() > 0){
+				for(RemoteJob remoteJob : result){
+					List<RemoteJob> list = new ArrayList<RemoteJob>(remoteJobs);
+					list.add(remoteJob);
+					String newRemoteURL = remoteJob.getUrl();
+					showAllJobs(newRemoteURL, list);
+				}
+			} else {
+				//Some leaf is done with recursion
+				StringBuilder builder = new StringBuilder();
+				for(int i=0;i<remoteJobs.size()-1;++i){
+					builder.append(remoteJobs.get(i).getName()).append("/");
+				}
+				RemoteJob jobToDisplay = remoteJobs.get(remoteJobs.size()-1);
+				jobToDisplay.setPath(builder.toString());
+				this.remoteJobs.add(jobToDisplay);
+			}
+		} catch(Exception e){
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * transform from {@link NodeList} to a {@link List} of {@link RemoteJob}s
+	 */
+	private static List<RemoteJob> fromNodeListToList(NodeList nl){
+		List<RemoteJob> result = new ArrayList<RemoteJob>();
+		if(nl == null) return result;
+		for (int i = 0; i < nl.getLength(); i++) {
+			Element job = (Element) nl.item(i);
+			String description = text(job, "description");
+			RemoteJob entry = new RemoteJob(text(job, "name"),
+					text(job, "url"), description == null ? "" : description);
+			result.add(entry);
+		}
+		return result;
+	}
 }

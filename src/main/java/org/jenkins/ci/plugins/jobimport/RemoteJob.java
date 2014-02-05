@@ -32,88 +32,101 @@ import org.apache.commons.lang.StringUtils;
  * @since 1.0
  */
 public final class RemoteJob implements Comparable<RemoteJob> {
-  private String name;
-  private String url;
-  private String description;
+	private String name;
+	private String url;
+	private String description;
+	/** the parent path(all cloudbees folders) */
+	private String path;
 
-  public RemoteJob() {
-    this((String) null, (String) null, (String) null);
-  }
+	public RemoteJob() {
+		this((String) null, (String) null, (String) null);
+	}
 
-  public RemoteJob(final String name) {
-    this(name, (String) null, (String) null);
-  }
+	public RemoteJob(final String name) {
+		this(name, (String) null, (String) null);
+	}
 
-  public RemoteJob(final String name, final String url) {
-    this(name, url, (String) null);
-  }
+	public RemoteJob(final String name, final String url) {
+		this(name, url, (String) null);
+	}
 
-  public RemoteJob(final String name, final String url, final String description) {
-    super();
-    this.name = name;
-    this.url = url;
-    this.description = cleanRemoteString(description);
-  }
+	public RemoteJob(final String name, final String url,
+			final String description) {
+		super();
+		this.name = name;
+		this.url = url;
+		this.description = cleanRemoteString(description);
+	}
 
-  public String getName() {
-    return name;
-  }
+	public String getName() {
+		return name;
+	}
 
-  public void setName(final String name) {
-    this.name = name;
-  }
+	public void setName(final String name) {
+		this.name = name;
+	}
 
-  public String getUrl() {
-    return url;
-  }
+	public String getUrl() {
+		return url;
+	}
 
-  public void setUrl(final String url) {
-    this.url = url;
-  }
+	public void setUrl(final String url) {
+		this.url = url;
+	}
 
-  public String getDescription() {
-    return description;
-  }
+	public String getDescription() {
+		return description;
+	}
 
-  public void setDescription(final String description) {
-    this.description = cleanRemoteString(description);
-  }
+	public void setDescription(final String description) {
+		this.description = cleanRemoteString(description);
+	}
 
-  public int compareTo(final RemoteJob other) {
-    if (this == other) {
-      return 0;
-    }
+	public String getPath() {
+		return path;
+	}
 
-    return name.compareTo(other.getName());
-  }
+	public void setPath(String path) {
+		this.path = path;
+	}
 
-  @Override
-  public boolean equals(final Object obj) {
-    if (this == obj) {
-      return true;
-    }
+	public int compareTo(final RemoteJob other) {
+		if (this == other) {
+			return 0;
+		}
 
-    if (!(obj instanceof RemoteJob)) {
-      return false;
-    }
+		return name.compareTo(other.getName());
+	}
 
-    return name.equals(((RemoteJob) obj).getName());
-  }
+	@Override
+	public boolean equals(final Object obj) {
+		if (this == obj) {
+			return true;
+		}
 
-  @Override
-  public int hashCode() {
-    return name.hashCode();
-  }
+		if (!(obj instanceof RemoteJob)) {
+			return false;
+		}
 
-  @Override
-  public String toString() {
-    return new StringBuilder().append("RemoteJob: ").append(name).append(", ").append(url).append(", ")
-        .append(description).toString();
-  }
+		return name.equals(((RemoteJob) obj).getName());
+	}
 
-  protected static final int MAX_STRLEN = 4096;
+	@Override
+	public int hashCode() {
+		return name.hashCode();
+	}
 
-  protected static final String cleanRemoteString(final String string) {
-    return StringUtils.substring(StringEscapeUtils.escapeHtml(string), 0, MAX_STRLEN);
-  }
+	@Override
+	public String toString() {
+		return new StringBuilder().append("RemoteJob: ").append(name)
+				.append(", ").append(url).append(", ").append(description)
+				.toString();
+	}
+
+	protected static final int MAX_STRLEN = 4096;
+
+	protected static final String cleanRemoteString(final String string) {
+		return StringUtils.substring(StringEscapeUtils.escapeHtml(string), 0,
+				MAX_STRLEN);
+	}
 }
