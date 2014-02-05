@@ -24,11 +24,10 @@
 
 package org.jenkins.ci.plugins.jobimport;
 
-import hudson.Extension;
-import hudson.model.Hudson;
-import hudson.model.RootAction;
+import hudson.model.Action;
 import hudson.model.TopLevelItem;
 import hudson.util.FormValidation;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
@@ -38,8 +37,10 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import javax.servlet.ServletException;
 import javax.xml.parsers.DocumentBuilderFactory;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.QueryParameter;
@@ -53,12 +54,12 @@ import org.w3c.dom.NodeList;
  * @author <a href="mailto:jieryn@gmail.com">Jesse Farinacci</a>
  * @since 1.0
  */
-@Extension
-public final class JobImportAction implements RootAction {
+public class JobImportAction implements Action {
 
   private static final Logger                               LOG                    = Logger
                                                                                        .getLogger(JobImportAction.class
                                                                                            .getName());
+  final private JobImportContainer container;
 
   private String                                            remoteUrl;
   private String username, password;
@@ -66,14 +67,18 @@ public final class JobImportAction implements RootAction {
   private final SortedSet<RemoteJob>                        remoteJobs             = new TreeSet<RemoteJob>();
 
   private final SortedMap<RemoteJob, RemoteJobImportStatus> remoteJobsImportStatus = new TreeMap<RemoteJob, RemoteJobImportStatus>();
-
+  
+  public JobImportAction(JobImportContainer container) {
+	  this.container = container;
+  }
+  
   public void doClear(final StaplerRequest request, final StaplerResponse response) throws ServletException,
       IOException {
     remoteUrl = null;
     username = password = null;
     remoteJobs.clear();
     remoteJobsImportStatus.clear();
-    response.sendRedirect(Hudson.getInstance().getRootUrl());
+    response.sendRedirect(container.getUrl());
   }
 
   public void doImport(final StaplerRequest request, final StaplerResponse response) throws ServletException,
@@ -90,8 +95,8 @@ public final class JobImportAction implements RootAction {
             }
 
             // ---
-
-            if (Hudson.getInstance().getItem(remoteJob.getName()) != null) {
+            
+            if (container.hasJob(remoteJob.getName())) {
               remoteJobsImportStatus.get(remoteJob).setStatus(MessagesUtils.formatFailedDuplicateJobName());
             }
 
@@ -100,7 +105,7 @@ public final class JobImportAction implements RootAction {
 
               try {
                   inputStream = URLUtils.fetchUrl(remoteJob.getUrl() + "/config.xml", username, password);
-                  Hudson.getInstance().createProjectFromXML(remoteJob.getName(), inputStream);
+                  container.createProjectFromXML(remoteJob.getName(), inputStream);
                   remoteJobsImportStatus.get(remoteJob).setStatus(MessagesUtils.formatSuccess());
               }
 
@@ -115,7 +120,7 @@ public final class JobImportAction implements RootAction {
                 remoteJobsImportStatus.get(remoteJob).setStatus(MessagesUtils.formatFailedException(e));
 
                 try {
-                    TopLevelItem created = Hudson.getInstance().getItem(remoteJob.getName());
+                    TopLevelItem created = container.getJob(remoteJob.getName());
                     if (created != null) {
                         created.delete();
                     }
@@ -230,4 +235,5 @@ public final class JobImportAction implements RootAction {
   public void setRemoteUrl(final String remoteUrl) {
     this.remoteUrl = remoteUrl;
   }
+  
 }
