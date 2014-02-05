@@ -207,7 +207,7 @@ public class JobImportAction implements Action {
     }
 
   public String getUrlName() {
-    return "/job-import";
+    return "job-import";
   }
 
   public boolean isRemoteJobsAvailable() {
