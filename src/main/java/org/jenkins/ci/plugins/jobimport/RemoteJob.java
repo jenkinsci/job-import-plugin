@@ -24,6 +24,9 @@
 
 package org.jenkins.ci.plugins.jobimport;
 
+import java.util.SortedSet;
+import java.util.TreeSet;
+
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 
@@ -37,6 +40,7 @@ public final class RemoteJob implements Comparable<RemoteJob> {
 	private String description;
 	/** the parent path(all cloudbees folders) */
 	private String path;
+	private SortedSet<RemoteJob> jobs;
 
 	public RemoteJob() {
 		this((String) null, (String) null, (String) null);
@@ -56,12 +60,13 @@ public final class RemoteJob implements Comparable<RemoteJob> {
 		this.name = name;
 		this.url = url;
 		this.description = cleanRemoteString(description);
+		this.jobs = new TreeSet<RemoteJob>();
 	}
 
 	public String getName() {
 		return name;
 	}
-
+	
 	public void setName(final String name) {
 		this.name = name;
 	}
@@ -88,6 +93,14 @@ public final class RemoteJob implements Comparable<RemoteJob> {
 
 	public void setPath(String path) {
 		this.path = path;
+	}
+	
+	public SortedSet<RemoteJob> getJobs() {
+		return jobs;
+	}
+	
+	public void setJobs(SortedSet<RemoteJob> jobs) {
+		this.jobs = jobs;
 	}
 
 	public int compareTo(final RemoteJob other) {

@@ -151,7 +151,7 @@ public class JobImportAction implements Action {
     remoteUrl = request.getParameter("remoteUrl");
     username = request.getParameter("username");
     password = request.getParameter("password");
-    showAllJobs(remoteUrl, new ArrayList<RemoteJob>());
+    getAllJobs(remoteUrl, remoteJobs);
     response.forwardToPreviousPage(request);
   }
   private static String text(Element e, String name) {
@@ -222,6 +222,29 @@ public class JobImportAction implements Action {
     this.remoteUrl = remoteUrl;
   }
   
+  
+  	/**
+  	 * Method that will retrieve all remote jobs recursively.
+  	 * @param remoteURL
+  	 * @param remoteJobs
+  	 */
+  	public void getAllJobs(String remoteURL, SortedSet<RemoteJob> remoteJobs) {
+  		try{
+			if(!remoteURL.endsWith("/")) remoteURL = remoteURL + "/";
+			Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder()
+					.parse(URLUtils.fetchUrl(remoteURL + "api/xml?tree=jobs[name,url,description]",
+							username, password));
+			List<RemoteJob> result = fromNodeListToList(doc.getElementsByTagName("job"));
+			for(RemoteJob remoteJob : result){
+				remoteJobs.add(remoteJob);
+				String newRemoteURL = remoteJob.getUrl();
+				getAllJobs(newRemoteURL, remoteJob.getJobs());
+			}
+		} catch(Exception e){
+			e.printStackTrace();
+		}
+  	}
+  	
 	/**
 	 * method that will display all remote jobs with their full path(cloudbees folders)
 	 */
