@@ -24,16 +24,26 @@
 
 <?jelly escape-by-default='false'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-	<div class="job-cell"><f:checkbox name="jobUrl" value="${job.url}"/></div>
-	<div class="job-cell"><a target="_blank" href="${job.url}">${job.path}${job.name}</a></div>
-	<div class="job-cell">${job.description}</div>
-	<div class="job-clear"></div>
-	
-	<j:if test="${!empty job.jobs}">
-		<div class="job-nested">
-			<j:forEach var="job" items="${job.jobs}">
-				<st:include page="jobs.jelly" />
-			</j:forEach>
+	<j:if test="${!job.hidden}">
+		
+		<div class="job-cell">
+			<j:if test="${!empty job.jobs}">
+				<img src="/jenkins/images/16x16/folder.png"></img>
+			</j:if>
+			<j:if test="${empty job.jobs}">
+				<f:checkbox name="jobUrl" value="${job.url}"/>
+			</j:if>
 		</div>
+		<div class="job-cell"><a target="_blank" href="${job.url}">${job.name}</a></div>
+		<div class="job-cell">${job.description}</div>
+		<div class="job-clear"></div>
+		
+		<j:if test="${!empty job.jobs}">
+			<div class="job-nested">
+				<j:forEach var="job" items="${job.jobs}">
+					<st:include page="jobs.jelly" />
+				</j:forEach>
+			</div>
+		</j:if>
 	</j:if>
 </j:jelly>

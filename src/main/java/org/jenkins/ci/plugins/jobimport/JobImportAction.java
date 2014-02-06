@@ -52,6 +52,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
+import com.google.common.collect.Sets;
+
 /**
  * @author <a href="mailto:jieryn@gmail.com">Jesse Farinacci</a>
  * @since 1.0
@@ -151,7 +153,7 @@ public class JobImportAction implements Action {
     remoteUrl = request.getParameter("remoteUrl");
     username = request.getParameter("username");
     password = request.getParameter("password");
-    getAllJobs(remoteUrl, remoteJobs);
+    remoteJobs.addAll(getAllJobs(remoteUrl));
     response.forwardToPreviousPage(request);
   }
   private static String text(Element e, String name) {
@@ -228,54 +230,41 @@ public class JobImportAction implements Action {
   	 * @param remoteURL
   	 * @param remoteJobs
   	 */
-  	public void getAllJobs(String remoteURL, SortedSet<RemoteJob> remoteJobs) {
+  	public SortedSet<RemoteJob> getAllJobs(String remoteURL) {
   		try{
-			if(!remoteURL.endsWith("/")) remoteURL = remoteURL + "/";
-			Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder()
-					.parse(URLUtils.fetchUrl(remoteURL + "api/xml?tree=jobs[name,url,description]",
-							username, password));
-			List<RemoteJob> result = fromNodeListToList(doc.getElementsByTagName("job"));
-			for(RemoteJob remoteJob : result){
-				remoteJobs.add(remoteJob);
-				String newRemoteURL = remoteJob.getUrl();
-				getAllJobs(newRemoteURL, remoteJob.getJobs());
-			}
+			return getAllJobsImpl(remoteURL, null);
 		} catch(Exception e){
 			e.printStackTrace();
 		}
+  		return Sets.newTreeSet();
   	}
   	
-	/**
-	 * method that will display all remote jobs with their full path(cloudbees folders)
-	 */
-	public void showAllJobs(String remoteURL, List<RemoteJob> remoteJobs) {
-		try{
-			if(!remoteURL.endsWith("/")) remoteURL = remoteURL + "/";
-			Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder()
-					.parse(URLUtils.fetchUrl(remoteURL + "api/xml?tree=jobs[name,url,description]",
-							username, password));
-			List<RemoteJob> result = fromNodeListToList(doc.getElementsByTagName("job"));
-			if(result.size() > 0){
-				for(RemoteJob remoteJob : result){
-					List<RemoteJob> list = new ArrayList<RemoteJob>(remoteJobs);
-					list.add(remoteJob);
-					String newRemoteURL = remoteJob.getUrl();
-					showAllJobs(newRemoteURL, list);
-				}
-			} else {
-				//Some leaf is done with recursion
-				StringBuilder builder = new StringBuilder();
-				for(int i=0;i<remoteJobs.size()-1;++i){
-					builder.append(remoteJobs.get(i).getName()).append("/");
-				}
-				RemoteJob jobToDisplay = remoteJobs.get(remoteJobs.size()-1);
-				jobToDisplay.setPath(builder.toString());
-				this.remoteJobs.add(jobToDisplay);
-			}
-		} catch(Exception e){
-			e.printStackTrace();
+  	/**
+  	 * @param remoteURL
+  	 * @param parent
+  	 * @return
+  	 * @throws Exception
+  	 */
+  	private SortedSet<RemoteJob> getAllJobsImpl(String remoteURL, RemoteJob parent) throws Exception {
+  		SortedSet<RemoteJob> remoteJobs = new TreeSet<RemoteJob>();
+  		if(!remoteURL.endsWith("/")) remoteURL = remoteURL + "/";
+		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder()
+				.parse(URLUtils.fetchUrl(remoteURL + "api/xml?tree=jobs[name,url,description]",
+						username, password));
+		List<RemoteJob> result = fromNodeListToList(doc.getElementsByTagName("job"));
+		boolean parentIsFolder = doc.getElementsByTagName("folder").getLength() > 0;
+		boolean allJobsHidden = true;
+		for(RemoteJob remoteJob : result){
+			remoteJobs.add(remoteJob);
+			String newRemoteURL = remoteJob.getUrl();
+			remoteJob.setJobs(getAllJobsImpl(newRemoteURL, remoteJob));
+			allJobsHidden = allJobsHidden && remoteJob.isHidden();
 		}
-	}
+		if (parent != null)
+			parent.setHidden(parentIsFolder && allJobsHidden);
+		
+		return remoteJobs;
+  	}
 	
 	/**
 	 * transform from {@link NodeList} to a {@link List} of {@link RemoteJob}s
