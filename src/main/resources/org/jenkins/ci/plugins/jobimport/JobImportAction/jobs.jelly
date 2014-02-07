@@ -28,7 +28,7 @@
 		
 		<div class="job-cell-first">
 			<j:if test="${!empty job.jobs}">
-				<img src="/jenkins/images/16x16/folder.png"></img>
+				<img src="${rootURL}/images/16x16/folder.png"></img>
 			</j:if>
 			<j:if test="${empty job.jobs}">
 				<input type="checkbox" class="job-checkbox" name="jobUrl" value="${job.url}"/>
