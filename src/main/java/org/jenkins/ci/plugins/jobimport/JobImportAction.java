@@ -92,7 +92,13 @@ public class JobImportAction implements Action {
     if (isRemoteJobsAvailable()) {
       if (request.hasParameter("jobUrl")) {
         for (final String jobUrl : Arrays.asList(request.getParameterValues("jobUrl"))) {
-          final RemoteJob remoteJob = getRemoteJobs(jobUrl);
+        	RemoteJob remoteJob = null;
+        	if(StringUtils.isNotEmpty(jobUrl)){
+        		for(RemoteJob job : remoteJobs){
+        			remoteJob = getRemoteJobs(jobUrl, job);
+        			if(remoteJob!=null) break;
+        		}
+        	}
           if (remoteJob != null) {
             if (!remoteJobsImportStatus.containsKey(remoteJob)) {
               remoteJobsImportStatus.put(remoteJob, new RemoteJobImportStatus(remoteJob));
@@ -182,16 +188,13 @@ public class JobImportAction implements Action {
     return remoteJobs;
   }
 
-  private RemoteJob getRemoteJobs(final String jobUrl) {
-    if (StringUtils.isNotEmpty(jobUrl)) {
-      for (final RemoteJob remoteJob : remoteJobs) {
-        if (jobUrl.equals(remoteJob.getUrl())) {
-          return remoteJob;
-        }
-      }
-    }
-
-    return null;
+  private RemoteJob getRemoteJobs(final String jobUrl, final RemoteJob remoteJob) {
+	  if(jobUrl.equals(remoteJob.getUrl())) return remoteJob;
+	  for(RemoteJob childJob : remoteJob.getJobs()){
+		  RemoteJob result = getRemoteJobs(jobUrl, childJob);
+		  if(result!=null) return result;
+	  }
+	  return null;
   }
 
   public SortedMap<RemoteJob, RemoteJobImportStatus> getRemoteJobsImportStatus() {
