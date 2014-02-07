@@ -24,23 +24,28 @@
 
 package org.jenkins.ci.plugins.jobimport;
 
-import java.io.IOException;
-import java.io.InputStream;
+import hudson.Extension;
+import hudson.model.Action;
 
-import hudson.model.TopLevelItem;
+import java.util.Collection;
+import java.util.Collections;
+
+import com.cloudbees.hudson.plugins.folder.TransientFolderActionFactory;
+import com.cloudbees.hudson.plugins.folder.Folder;
 
 /**
  * @author mrcaraion
  *
  */
-public interface JobImportContainer {
+@Extension
+public class JobImportFolderActionFactory extends TransientFolderActionFactory {
 
-	boolean hasJob(String name);
-	
-	TopLevelItem getJob(String name);
-	
-	TopLevelItem createProjectFromXML(String name, InputStream xml) throws IOException;
-	
-	String getUrl();
-	
+	/* (non-Javadoc)
+	 * @see com.cloudbees.hudson.plugins.folder.TransientFolderActionFactory#createFor(com.cloudbees.hudson.plugins.folder.Folder)
+	 */
+	@Override
+	public Collection<? extends Action> createFor(Folder target) {
+		return Collections.singleton(new JobImportAction(new JobImportFolder(target)));
+	}
+
 }

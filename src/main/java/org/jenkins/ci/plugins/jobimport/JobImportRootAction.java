@@ -24,23 +24,18 @@
 
 package org.jenkins.ci.plugins.jobimport;
 
-import java.io.IOException;
-import java.io.InputStream;
-
-import hudson.model.TopLevelItem;
+import hudson.Extension;
+import hudson.model.RootAction;
 
 /**
  * @author mrcaraion
  *
  */
-public interface JobImportContainer {
+@Extension
+public final class JobImportRootAction extends JobImportAction implements RootAction {
 
-	boolean hasJob(String name);
-	
-	TopLevelItem getJob(String name);
-	
-	TopLevelItem createProjectFromXML(String name, InputStream xml) throws IOException;
-	
-	String getUrl();
-	
+	public JobImportRootAction() {
+		super(new JobImportRoot());
+	}
+
 }

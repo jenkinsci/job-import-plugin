@@ -24,23 +24,46 @@
 
 package org.jenkins.ci.plugins.jobimport;
 
+import hudson.model.TopLevelItem;
+import hudson.model.Hudson;
+
 import java.io.IOException;
 import java.io.InputStream;
-
-import hudson.model.TopLevelItem;
 
 /**
  * @author mrcaraion
  *
  */
-public interface JobImportContainer {
+public class JobImportRoot implements JobImportContainer {
 
-	boolean hasJob(String name);
 	
-	TopLevelItem getJob(String name);
+	/* (non-Javadoc)
+	 * @see org.jenkins.ci.plugins.jobimport.JobImportContainer#hasJob(java.lang.String)
+	 */
+	public boolean hasJob(String name) {
+		return Hudson.getInstance().getItem(name) != null;
+	}
 	
-	TopLevelItem createProjectFromXML(String name, InputStream xml) throws IOException;
-	
-	String getUrl();
-	
+	/* (non-Javadoc)
+	 * @see org.jenkins.ci.plugins.jobimport.JobImportContainer#getJob(java.lang.String)
+	 */
+	public TopLevelItem getJob(String name) {
+		return Hudson.getInstance().getItem(name);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.jenkins.ci.plugins.jobimport.JobImportContainer#createProjectFromXML(java.lang.String, java.io.InputStream)
+	 */
+	public TopLevelItem createProjectFromXML(String name, InputStream xml)
+		throws IOException {
+		return Hudson.getInstance().createProjectFromXML(name, xml);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.jenkins.ci.plugins.jobimport.JobImportContainer#getUrl()
+	 */
+	public String getUrl() {
+		return Hudson.getInstance().getRootUrl();
+	}
+
 }
