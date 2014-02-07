@@ -29,6 +29,10 @@
     <st:include page="/hudson/model/View/sidepanel.jelly" />
     <l:main-panel>
       <style>
+      	table.jobImportPlugin { /* width: 100%; */ }
+        table.jobImportPlugin th { font-weight: bold; text-align: left; }
+        table.jobImportPlugin td { text-align: left; }
+      
         .job-container { width: 100%; }
         .job-cell-first { 
         	float: left;
