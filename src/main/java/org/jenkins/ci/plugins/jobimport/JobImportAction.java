@@ -94,10 +94,7 @@ public class JobImportAction implements Action {
         for (final String jobUrl : Arrays.asList(request.getParameterValues("jobUrl"))) {
         	RemoteJob remoteJob = null;
         	if(StringUtils.isNotEmpty(jobUrl)){
-        		for(RemoteJob job : remoteJobs){
-        			remoteJob = getRemoteJobs(jobUrl, job);
-        			if(remoteJob!=null) break;
-        		}
+        		remoteJob = findRemoteJob(jobUrl, remoteJobs);
         	}
           if (remoteJob != null) {
             if (!remoteJobsImportStatus.containsKey(remoteJob)) {
@@ -187,11 +184,13 @@ public class JobImportAction implements Action {
   public SortedSet<RemoteJob> getRemoteJobs() {
     return remoteJobs;
   }
-
-  private RemoteJob getRemoteJobs(final String jobUrl, final RemoteJob remoteJob) {
-	  if(jobUrl.equals(remoteJob.getUrl())) return remoteJob;
-	  for(RemoteJob childJob : remoteJob.getJobs()){
-		  RemoteJob result = getRemoteJobs(jobUrl, childJob);
+  
+  private RemoteJob findRemoteJob(final String jobUrl, final SortedSet<RemoteJob> jobs) {
+	  for(RemoteJob childJob : jobs) {
+		  if(jobUrl.equals(childJob.getUrl())) {
+			  return childJob;
+		  }
+		  RemoteJob result = findRemoteJob(jobUrl, childJob.getJobs());
 		  if(result!=null) return result;
 	  }
 	  return null;
