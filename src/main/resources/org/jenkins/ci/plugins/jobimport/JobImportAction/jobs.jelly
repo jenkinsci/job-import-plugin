@@ -26,12 +26,12 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
 	<j:if test="${!job.hidden}">
 		
-		<div class="job-cell">
+		<div class="job-cell-first">
 			<j:if test="${!empty job.jobs}">
-				<img src="/jenkins/images/16x16/folder.png"></img>
+				<img src="${rootURL}/images/16x16/folder.png"></img>
 			</j:if>
 			<j:if test="${empty job.jobs}">
-				<f:checkbox name="jobUrl" value="${job.url}"/>
+				<input type="checkbox" class="job-checkbox" name="jobUrl" value="${job.url}"/>
 			</j:if>
 		</div>
 		<div class="job-cell"><a target="_blank" href="${job.url}">${job.name}</a></div>

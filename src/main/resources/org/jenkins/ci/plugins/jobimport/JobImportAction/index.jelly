@@ -30,9 +30,19 @@
     <l:main-panel>
       <style>
         .job-container { width: 100%; }
-        .job-cell { float: left; }
+        .job-cell-first { 
+        	float: left;
+        	min-height: 16px;
+        	vertical-align: middle;
+       	}
+        .job-cell { 
+        	float: left; 
+       		margin-left: 4px; 
+    		margin-top: 3px;
+    	}
         .job-clear { clear: both; }
-        .job-nested { padding-left: 20px; width: 100%; }
+        .job-nested { padding-left: 20px; margin-top: 3px; width: 100%; }
+        .job-checkbox { margin-left: 0}
       </style>
       <h1>${%Job.Import.Plugin.Title}</h1>
       <h2>${%Job.Import.Plugin.Description}</h2>
