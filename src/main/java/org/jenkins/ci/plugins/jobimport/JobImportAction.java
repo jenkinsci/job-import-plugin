@@ -72,6 +72,8 @@ public class JobImportAction implements Action {
 
   private final SortedMap<RemoteJob, RemoteJobImportStatus> remoteJobsImportStatus = new TreeMap<RemoteJob, RemoteJobImportStatus>();
   
+  private String remoteJobsQueryStatus;
+  
   public JobImportAction(JobImportContainer container) {
 	  this.container = container;
   }
@@ -82,6 +84,7 @@ public class JobImportAction implements Action {
     username = password = null;
     remoteJobs.clear();
     remoteJobsImportStatus.clear();
+    remoteJobsQueryStatus = null;
     response.sendRedirect(container.getUrl());
   }
 
@@ -153,6 +156,7 @@ public class JobImportAction implements Action {
       IOException {
     remoteJobs.clear();
     remoteJobsImportStatus.clear();
+    remoteJobsQueryStatus = null;
     remoteUrl = request.getParameter("remoteUrl");
     username = request.getParameter("username");
     password = request.getParameter("password");
@@ -199,6 +203,10 @@ public class JobImportAction implements Action {
   public SortedMap<RemoteJob, RemoteJobImportStatus> getRemoteJobsImportStatus() {
     return remoteJobsImportStatus;
   }
+  
+  public String getRemoteJobsQueryStatus() {
+	  return remoteJobsQueryStatus;
+  }
 
   public String getRemoteUrl() {
     return remoteUrl;
@@ -221,6 +229,10 @@ public class JobImportAction implements Action {
   public boolean isRemoteJobsImportStatusAvailable() {
     return remoteJobsImportStatus.size() > 0;
   }
+  
+  public boolean isRemoteJobsQueryStatusAvailable() {
+	  return remoteJobsQueryStatus != null;
+  }
 
   public void setRemoteUrl(final String remoteUrl) {
     this.remoteUrl = remoteUrl;
@@ -237,6 +249,7 @@ public class JobImportAction implements Action {
 			return getAllJobsImpl(remoteURL, null);
 		} catch(Exception e){
 			e.printStackTrace();
+			remoteJobsQueryStatus = MessagesUtils.formatQueryFailedException(e);
 		}
   		return Sets.newTreeSet();
   	}

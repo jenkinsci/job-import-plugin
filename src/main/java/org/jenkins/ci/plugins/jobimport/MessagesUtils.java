@@ -42,6 +42,14 @@ public final class MessagesUtils {
   public static String formatFailedException(final String message) {
     return Messages.Job_Import_Plugin_Import_Failed_Exception(message);
   }
+  
+  public static String formatQueryFailedException(final Exception e) {
+	  return formatQueryFailedException(e.getMessage());
+  }
+  
+  public static String formatQueryFailedException(final String message) {
+	  return Messages.Job_Import_Plugin_Query_Failed_Exception(message);
+  }
 
   public static String formatSuccess() {
     return Messages.Job_Import_Plugin_Import_Success();

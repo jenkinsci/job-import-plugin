@@ -112,6 +112,16 @@
           </f:section>
         </f:form>
       </j:if>
+      <j:if test="${it.remoteJobsQueryStatusAvailable}">
+        <br/>
+        <f:form>
+          <f:section title="${%Job.Import.Plugin.Query.Status.Section.Title}">
+            <f:block>
+              ${it.remoteJobsQueryStatus}
+            </f:block>
+          </f:section>
+        </f:form>
+      </j:if>
     </l:main-panel>
   </l:layout>
 </j:jelly>
