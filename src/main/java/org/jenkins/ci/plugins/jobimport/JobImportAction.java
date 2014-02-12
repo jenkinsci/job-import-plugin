@@ -80,13 +80,15 @@ public class JobImportAction implements Action {
   
   public void doClear(final StaplerRequest request, final StaplerResponse response) throws ServletException,
       IOException {
-    remoteUrl = null;
-    username = password = null;
-    remoteJobs.clear();
-    remoteJobsImportStatus.clear();
-    remoteJobsQueryStatus = null;
+    reset();
     response.sendRedirect(container.getUrl());
   }
+  
+  public void doReset(final StaplerRequest request, final StaplerResponse response) throws ServletException,
+	  IOException {
+	reset();
+	response.sendRedirect(getAbsoluteUrl());
+	}
 
   public void doImport(final StaplerRequest request, final StaplerResponse response) throws ServletException,
       IOException {
@@ -221,6 +223,10 @@ public class JobImportAction implements Action {
   public String getUrlName() {
     return "job-import";
   }
+  
+  protected String getAbsoluteUrl() {
+	  return container.getUrl() + getUrlName();
+  }
 
   public boolean isRemoteJobsAvailable() {
     return remoteJobs.size() > 0;
@@ -236,6 +242,14 @@ public class JobImportAction implements Action {
 
   public void setRemoteUrl(final String remoteUrl) {
     this.remoteUrl = remoteUrl;
+  }
+  
+  protected void reset() {
+	remoteUrl = null;
+    username = password = null;
+    remoteJobs.clear();
+    remoteJobsImportStatus.clear();
+    remoteJobsQueryStatus = null;
   }
   
   
