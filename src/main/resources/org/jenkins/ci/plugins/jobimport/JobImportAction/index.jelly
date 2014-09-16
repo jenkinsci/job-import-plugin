@@ -46,7 +46,7 @@
           </f:entry>
           <!-- XXX offer a button to browse to /me/configure or /${username}/configure -->
           <f:entry title="Password/API Token" field="password">
-            <f:textbox name="password" field="password" value="${it.password}"/>
+            <f:password name="password" field="password" value="${it.password}"/>
           </f:entry>
           <!--f:validateButton title="${%Job.Import.Plugin.Query.Section.Validate.Title}" method="doTestConnection" with="remoteUrl"/-->
           <f:block>
