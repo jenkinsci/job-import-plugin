@@ -1,7 +1,7 @@
 /*
  * The MIT License
  * 
- * Copyright (c) 2011, Jesse Farinacci
+ * Copyright (c) 2014, Vivat Inc.
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,41 +24,46 @@
 
 package org.jenkins.ci.plugins.jobimport;
 
+import hudson.model.TopLevelItem;
+import hudson.model.Hudson;
+
+import java.io.IOException;
+import java.io.InputStream;
+
 /**
- * Various utility functions for working with localized Messages.
- * 
- * @author <a href="mailto:jieryn@gmail.com">Jesse Farinacci</a>
- * @since 1.0
+ * @author mrcaraion
+ *
  */
-public final class MessagesUtils {
-  public static String formatFailedDuplicateJobName() {
-    return Messages.Job_Import_Plugin_Import_Failed_Duplicate();
-  }
+public class JobImportRoot implements JobImportContainer {
 
-  public static String formatFailedException(final Exception e) {
-    return formatFailedException(e.getMessage());
-  }
+	
+	/* (non-Javadoc)
+	 * @see org.jenkins.ci.plugins.jobimport.JobImportContainer#hasJob(java.lang.String)
+	 */
+	public boolean hasJob(String name) {
+		return Hudson.getInstance().getItem(name) != null;
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.jenkins.ci.plugins.jobimport.JobImportContainer#getJob(java.lang.String)
+	 */
+	public TopLevelItem getJob(String name) {
+		return Hudson.getInstance().getItem(name);
+	}
 
-  public static String formatFailedException(final String message) {
-    return Messages.Job_Import_Plugin_Import_Failed_Exception(message);
-  }
-  
-  public static String formatQueryFailedException(final Exception e) {
-	  return formatQueryFailedException(e.getMessage());
-  }
-  
-  public static String formatQueryFailedException(final String message) {
-	  return Messages.Job_Import_Plugin_Query_Failed_Exception(message);
-  }
+	/* (non-Javadoc)
+	 * @see org.jenkins.ci.plugins.jobimport.JobImportContainer#createProjectFromXML(java.lang.String, java.io.InputStream)
+	 */
+	public TopLevelItem createProjectFromXML(String name, InputStream xml)
+		throws IOException {
+		return Hudson.getInstance().createProjectFromXML(name, xml);
+	}
 
-  public static String formatSuccess() {
-    return Messages.Job_Import_Plugin_Import_Success();
-  }
+	/* (non-Javadoc)
+	 * @see org.jenkins.ci.plugins.jobimport.JobImportContainer#getUrl()
+	 */
+	public String getUrl() {
+		return Hudson.getInstance().getRootUrl();
+	}
 
-  /**
-   * Static-only access.
-   */
-  private MessagesUtils() {
-    /* static-only access */
-  }
 }

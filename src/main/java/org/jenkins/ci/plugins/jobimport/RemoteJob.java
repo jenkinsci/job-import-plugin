@@ -24,6 +24,8 @@
 
 package org.jenkins.ci.plugins.jobimport;
 
+import java.util.SortedSet;
+
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 
@@ -32,88 +34,121 @@ import org.apache.commons.lang.StringUtils;
  * @since 1.0
  */
 public final class RemoteJob implements Comparable<RemoteJob> {
-  private String name;
-  private String url;
-  private String description;
+	private String name;
+	private String url;
+	private String description;
+	private SortedSet<RemoteJob> jobs;
+	private boolean hidden;
 
-  public RemoteJob() {
-    this((String) null, (String) null, (String) null);
-  }
+	public RemoteJob() {
+		this((String) null, (String) null, (String) null);
+	}
 
-  public RemoteJob(final String name) {
-    this(name, (String) null, (String) null);
-  }
+	public RemoteJob(final String name) {
+		this(name, (String) null, (String) null);
+	}
 
-  public RemoteJob(final String name, final String url) {
-    this(name, url, (String) null);
-  }
+	public RemoteJob(final String name, final String url) {
+		this(name, url, (String) null);
+	}
 
-  public RemoteJob(final String name, final String url, final String description) {
-    super();
-    this.name = name;
-    this.url = url;
-    this.description = cleanRemoteString(description);
-  }
+	public RemoteJob(final String name, final String url,
+			final String description) {
+		super();
+		this.name = name;
+		this.url = url;
+		this.description = cleanRemoteString(description);
+	}
 
-  public String getName() {
-    return name;
-  }
+	public String getName() {
+		return name;
+	}
+	
+	public void setName(final String name) {
+		this.name = name;
+	}
 
-  public void setName(final String name) {
-    this.name = name;
-  }
+	public String getUrl() {
+		return url;
+	}
 
-  public String getUrl() {
-    return url;
-  }
+	public void setUrl(final String url) {
+		this.url = url;
+	}
 
-  public void setUrl(final String url) {
-    this.url = url;
-  }
+	public String getDescription() {
+		return description;
+	}
 
-  public String getDescription() {
-    return description;
-  }
+	public void setDescription(final String description) {
+		this.description = cleanRemoteString(description);
+	}
 
-  public void setDescription(final String description) {
-    this.description = cleanRemoteString(description);
-  }
+	/**
+	 * @return the jobs
+	 */
+	public SortedSet<RemoteJob> getJobs() {
+		return jobs;
+	}
 
-  public int compareTo(final RemoteJob other) {
-    if (this == other) {
-      return 0;
-    }
+	/**
+	 * @param jobs the jobs to set
+	 */
+	public void setJobs(SortedSet<RemoteJob> jobs) {
+		this.jobs = jobs;
+	}
 
-    return name.compareTo(other.getName());
-  }
+	/**
+	 * @return the hidden
+	 */
+	public boolean isHidden() {
+		return hidden;
+	}
 
-  @Override
-  public boolean equals(final Object obj) {
-    if (this == obj) {
-      return true;
-    }
+	/**
+	 * @param hidden the hidden to set
+	 */
+	public void setHidden(boolean hidden) {
+		this.hidden = hidden;
+	}
 
-    if (!(obj instanceof RemoteJob)) {
-      return false;
-    }
+	public int compareTo(final RemoteJob other) {
+		if (this == other) {
+			return 0;
+		}
 
-    return name.equals(((RemoteJob) obj).getName());
-  }
+		return name.compareTo(other.getName());
+	}
 
-  @Override
-  public int hashCode() {
-    return name.hashCode();
-  }
+	@Override
+	public boolean equals(final Object obj) {
+		if (this == obj) {
+			return true;
+		}
 
-  @Override
-  public String toString() {
-    return new StringBuilder().append("RemoteJob: ").append(name).append(", ").append(url).append(", ")
-        .append(description).toString();
-  }
+		if (!(obj instanceof RemoteJob)) {
+			return false;
+		}
 
-  protected static final int MAX_STRLEN = 4096;
+		return name.equals(((RemoteJob) obj).getName());
+	}
 
-  protected static final String cleanRemoteString(final String string) {
-    return StringUtils.substring(StringEscapeUtils.escapeHtml(string), 0, MAX_STRLEN);
-  }
+	@Override
+	public int hashCode() {
+		return name.hashCode();
+	}
+
+	@Override
+	public String toString() {
+		return new StringBuilder().append("RemoteJob: ").append(name)
+				.append(", ").append(url).append(", ").append(description)
+				.toString();
+	}
+
+	protected static final int MAX_STRLEN = 4096;
+
+	protected static final String cleanRemoteString(final String string) {
+		return StringUtils.substring(StringEscapeUtils.escapeHtml(string), 0,
+				MAX_STRLEN);
+	}
 }

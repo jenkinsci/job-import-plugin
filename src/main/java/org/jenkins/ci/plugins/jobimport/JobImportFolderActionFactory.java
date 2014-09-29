@@ -1,7 +1,7 @@
 /*
  * The MIT License
  * 
- * Copyright (c) 2011, Jesse Farinacci
+ * Copyright (c) 2014, Vivat Inc.
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,41 +24,28 @@
 
 package org.jenkins.ci.plugins.jobimport;
 
+import hudson.Extension;
+import hudson.model.Action;
+
+import java.util.Collection;
+import java.util.Collections;
+
+import com.cloudbees.hudson.plugins.folder.TransientFolderActionFactory;
+import com.cloudbees.hudson.plugins.folder.Folder;
+
 /**
- * Various utility functions for working with localized Messages.
- * 
- * @author <a href="mailto:jieryn@gmail.com">Jesse Farinacci</a>
- * @since 1.0
+ * @author mrcaraion
+ *
  */
-public final class MessagesUtils {
-  public static String formatFailedDuplicateJobName() {
-    return Messages.Job_Import_Plugin_Import_Failed_Duplicate();
-  }
+@Extension
+public class JobImportFolderActionFactory extends TransientFolderActionFactory {
 
-  public static String formatFailedException(final Exception e) {
-    return formatFailedException(e.getMessage());
-  }
+	/* (non-Javadoc)
+	 * @see com.cloudbees.hudson.plugins.folder.TransientFolderActionFactory#createFor(com.cloudbees.hudson.plugins.folder.Folder)
+	 */
+	@Override
+	public Collection<? extends Action> createFor(Folder target) {
+		return Collections.singleton(new JobImportAction(new JobImportFolder(target)));
+	}
 
-  public static String formatFailedException(final String message) {
-    return Messages.Job_Import_Plugin_Import_Failed_Exception(message);
-  }
-  
-  public static String formatQueryFailedException(final Exception e) {
-	  return formatQueryFailedException(e.getMessage());
-  }
-  
-  public static String formatQueryFailedException(final String message) {
-	  return Messages.Job_Import_Plugin_Query_Failed_Exception(message);
-  }
-
-  public static String formatSuccess() {
-    return Messages.Job_Import_Plugin_Import_Success();
-  }
-
-  /**
-   * Static-only access.
-   */
-  private MessagesUtils() {
-    /* static-only access */
-  }
 }

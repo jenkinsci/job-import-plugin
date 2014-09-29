@@ -29,9 +29,24 @@
     <st:include page="/hudson/model/View/sidepanel.jelly" />
     <l:main-panel>
       <style>
-        table.jobImportPlugin { /* width: 100%; */ }
+      	table.jobImportPlugin { /* width: 100%; */ }
         table.jobImportPlugin th { font-weight: bold; text-align: left; }
         table.jobImportPlugin td { text-align: left; }
+      
+        .job-container { width: 100%; }
+        .job-cell-first { 
+        	float: left;
+        	min-height: 16px;
+        	vertical-align: middle;
+       	}
+        .job-cell { 
+        	float: left;
+       		margin-left: 4px;
+       		margin-top: 2px;
+    	}
+        .job-clear { clear: both; }
+        .job-nested { padding-left: 20px; margin-top: 3px; width: 100%; }
+        .job-checkbox { margin-left: 0}
       </style>
       <h1>${%Job.Import.Plugin.Title}</h1>
       <h2>${%Job.Import.Plugin.Description}</h2>
@@ -60,20 +75,11 @@
         <f:form name="import" action="import" method="post">
           <f:section title="${%Job.Import.Plugin.Import.Section.Title}">
             <f:block>
-              <table class="jobImportPlugin" cellpadding="3" cellspacing="3">
-                <tr>
-                  <th>Import?</th>
-                  <th>Name</th>
-                  <th>Description</th>
-                </tr>
-                <j:forEach var="job" items="${it.remoteJobs}">
-                  <tr>
-                    <td><f:checkbox name="jobUrl" value="${job.url}"/></td>
-                    <td><a target="_blank" href="${job.url}">${job.name}</a></td>
-                    <td>${job.description}</td>
-                  </tr>
-                </j:forEach>
-              </table>
+            	<div class="job-container">
+            		<j:forEach var="job" items="${it.remoteJobs}">
+					    <st:include page="jobs.jelly" />
+					</j:forEach>
+            	</div>
             </f:block>
             <f:block>
               <input type="submit" value="${%Job.Import.Plugin.Import.Section.Submit.Name}"/>
@@ -102,6 +108,16 @@
             </f:block>
             <f:block>
               <input type="submit" value="${%Job.Import.Plugin.Status.Section.Submit.Name}"/>
+            </f:block>
+          </f:section>
+        </f:form>
+      </j:if>
+      <j:if test="${it.remoteJobsQueryStatusAvailable}">
+        <br/>
+        <f:form>
+          <f:section title="${%Job.Import.Plugin.Query.Status.Section.Title}">
+            <f:block>
+              ${it.remoteJobsQueryStatus}
             </f:block>
           </f:section>
         </f:form>
