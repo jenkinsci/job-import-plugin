@@ -158,7 +158,7 @@ public final class JobImportAction implements RootAction {
     }
 
     catch (Exception e) {
-        e.printStackTrace();
+        LOG.log(Level.SEVERE, (new StringBuilder()).append("Failed to import job from remote ").append(remoteUrl).toString(), e);
     }
 
     response.forwardToPreviousPage(request);
