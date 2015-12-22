@@ -258,6 +258,8 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
     this.remoteUrl = remoteUrl;
   }
 
+  public String getCredentialId() { return credentialId; }
+  
   private static List<StandardUsernamePasswordCredentials> allCredentials() {
     return CredentialsProvider.lookupCredentials(
       StandardUsernamePasswordCredentials.class,
