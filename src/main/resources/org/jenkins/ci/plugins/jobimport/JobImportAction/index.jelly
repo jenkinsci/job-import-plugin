@@ -74,7 +74,7 @@
                 <j:forEach var="job" items="${it.remoteJobs}">
                   <tr>
                     <td><f:checkbox name="jobUrl" value="${job.url}"/></td>
-                    <td><a target="_blank" href="${job.url}">${job.name}</a></td>
+                    <td><a target="_blank" href="${rootUrl}${job.url}">${job.name}</a></td>
                     <td>${job.description}</td>
                   </tr>
                 </j:forEach>
