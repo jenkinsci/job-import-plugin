@@ -24,14 +24,25 @@
 
 package org.jenkins.ci.plugins.jobimport;
 
+import com.cloudbees.plugins.credentials.CredentialsMatchers;
+import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
+import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
+import com.cloudbees.plugins.credentials.domains.DomainRequirement;
+import com.google.common.base.Strings;
 import hudson.Extension;
-import hudson.model.Hudson;
+import hudson.model.Describable;
+import hudson.model.Descriptor;
+import hudson.model.Item;
 import hudson.model.RootAction;
 import hudson.model.TopLevelItem;
+import hudson.security.ACL;
 import hudson.util.FormValidation;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
@@ -40,6 +51,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.ServletException;
 import javax.xml.parsers.DocumentBuilderFactory;
+
+import hudson.util.ListBoxModel;
+import jenkins.model.Jenkins;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.QueryParameter;
@@ -54,14 +68,14 @@ import org.w3c.dom.NodeList;
  * @since 1.0
  */
 @Extension
-public final class JobImportAction implements RootAction {
+public final class JobImportAction implements RootAction, Describable<JobImportAction> {
 
   private static final Logger                               LOG                    = Logger
                                                                                        .getLogger(JobImportAction.class
                                                                                            .getName());
 
   private String                                            remoteUrl;
-  private String username, password;
+  private String username, password, credentialId;
 
   private final SortedSet<RemoteJob>                        remoteJobs             = new TreeSet<RemoteJob>();
 
@@ -70,10 +84,10 @@ public final class JobImportAction implements RootAction {
   public void doClear(final StaplerRequest request, final StaplerResponse response) throws ServletException,
       IOException {
     remoteUrl = null;
-    username = password = null;
+    username = password = credentialId = null;
     remoteJobs.clear();
     remoteJobsImportStatus.clear();
-    response.sendRedirect(Hudson.getInstance().getRootUrl());
+    response.sendRedirect(Jenkins.getInstance().getRootUrl());
   }
 
   public void doImport(final StaplerRequest request, final StaplerResponse response) throws ServletException,
@@ -91,7 +105,7 @@ public final class JobImportAction implements RootAction {
 
             // ---
 
-            if (Hudson.getInstance().getItem(remoteJob.getName()) != null) {
+            if (Jenkins.getInstance().getItem(remoteJob.getName()) != null) {
               remoteJobsImportStatus.get(remoteJob).setStatus(MessagesUtils.formatFailedDuplicateJobName());
             }
 
@@ -100,7 +114,7 @@ public final class JobImportAction implements RootAction {
 
               try {
                   inputStream = URLUtils.fetchUrl(remoteJob.getUrl() + "/config.xml", username, password);
-                  Hudson.getInstance().createProjectFromXML(remoteJob.getName(), inputStream);
+                  Jenkins.getInstance().createProjectFromXML(remoteJob.getName(), inputStream);
                   remoteJobsImportStatus.get(remoteJob).setStatus(MessagesUtils.formatSuccess());
               }
 
@@ -115,7 +129,7 @@ public final class JobImportAction implements RootAction {
                 remoteJobsImportStatus.get(remoteJob).setStatus(MessagesUtils.formatFailedException(e));
 
                 try {
-                    TopLevelItem created = Hudson.getInstance().getItem(remoteJob.getName());
+                    TopLevelItem created = Jenkins.getInstance().getItem(remoteJob.getName());
                     if (created != null) {
                         created.delete();
                     }
@@ -141,9 +155,22 @@ public final class JobImportAction implements RootAction {
       IOException {
     remoteJobs.clear();
     remoteJobsImportStatus.clear();
-    remoteUrl = request.getParameter("remoteUrl");
-    username = request.getParameter("username");
-    password = request.getParameter("password");
+    remoteUrl = request.getParameter("_.remoteUrl");
+    username = request.getParameter("_.username");
+    password = request.getParameter("_.password");
+    credentialId = request.getParameter("_.credentialId");
+
+    if (!Strings.isNullOrEmpty(credentialId)) {
+        StandardUsernamePasswordCredentials cred = CredentialsMatchers.firstOrNull(
+            allCredentials(),
+            CredentialsMatchers.withId(credentialId)
+        );
+        if (cred != null) {
+            username = cred.getUsername();
+            password = cred.getPassword().getPlainText();
+        }
+    }
+
 
     try {
       if (StringUtils.isNotEmpty(remoteUrl)) {
@@ -229,5 +256,36 @@ public final class JobImportAction implements RootAction {
 
   public void setRemoteUrl(final String remoteUrl) {
     this.remoteUrl = remoteUrl;
+  }
+
+  private static List<StandardUsernamePasswordCredentials> allCredentials() {
+    return CredentialsProvider.lookupCredentials(
+      StandardUsernamePasswordCredentials.class,
+      (Item) null,
+      ACL.SYSTEM,
+      Collections.<DomainRequirement>emptyList()
+    );
+  }
+
+  @Override
+  public Descriptor<JobImportAction> getDescriptor() {
+    // TODO switch to Jenkins.getActiveInstance() once 1.590+ is the baseline
+    Jenkins jenkins = Jenkins.getInstance();
+    if (jenkins == null) {
+      throw new IllegalStateException("Jenkins has not been started, or was already shut down");
+    }
+    return jenkins.getDescriptorOrDie(getClass());
+  }
+  
+  @Extension
+  public static final class JobImportActionDescriptor extends Descriptor<JobImportAction> {
+
+    @Override
+    public String getDisplayName() { return ""; }
+
+    public ListBoxModel doFillCredentialIdItems() {
+      return new StandardUsernameListBoxModel()
+        .withAll(allCredentials());
+    }
   }
 }

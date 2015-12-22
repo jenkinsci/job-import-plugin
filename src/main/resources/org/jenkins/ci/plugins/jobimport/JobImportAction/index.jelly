@@ -24,6 +24,8 @@
 
 <?jelly escape-by-default='false'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+  <j:set var="instance" value="${it}"/>
+  <j:set var="descriptor" value="${instance.descriptor}"/>
   <j:getStatic var="permission" className="hudson.model.Item" field="CREATE"/>
   <l:layout norefresh="true" permission="${permission}" title="${%Job.Import.Plugin.Title}">
     <st:include page="/hudson/model/View/sidepanel.jelly" />
@@ -40,6 +42,9 @@
         <f:section title="${%Job.Import.Plugin.Query.Section.Title}">
           <f:entry title="${%Job.Import.Plugin.Query.Section.RemoteUrl.Title}" field="remoteUrl">
             <f:textbox />
+          </f:entry>
+          <f:entry title="${%Credentials}" field="credentialId">
+            <c:select xmlns:c="/lib/credentials"/>
           </f:entry>
           <f:entry title="Username (optional)" field="username">
             <f:textbox />
