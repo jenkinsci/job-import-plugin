@@ -31,7 +31,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>1.424</version>
+    <version>2.3</version>
   </parent>
 
   <artifactId>job-import-plugin</artifactId>
@@ -43,6 +43,11 @@
     Import jobs from another Jenkins instance.
   </description>
   <url>http://wiki.jenkins-ci.org/display/JENKINS/Job+Import+Plugin</url>
+
+  <properties>
+    <jenkins.version>1.580</jenkins.version>
+    <java.level>6</java.level>
+  </properties>
 
   <licenses>
     <license>
