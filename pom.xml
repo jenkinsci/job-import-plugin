@@ -64,6 +64,11 @@
       <name>Jesse Farinacci</name>
       <email>jieryn@gmail.com</email>
     </developer>
+    <developer>
+      <id>escoem</id>
+      <name>Emilio Escobar</name>
+      <email>escoem@gmail.com</email>
+    </developer>
   </developers>
 
   <scm>
