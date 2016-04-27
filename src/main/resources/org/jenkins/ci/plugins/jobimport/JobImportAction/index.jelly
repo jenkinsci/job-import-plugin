@@ -24,9 +24,11 @@
 
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+  <j:set var="instance" value="${it}"/>
+  <j:set var="descriptor" value="${instance.descriptor}"/>
   <j:getStatic var="permission" className="hudson.model.Item" field="CREATE"/>
   <l:layout permission="${permission}" title="${%Job.Import.Plugin.Title}">
-    <st:include page="/hudson/model/View/sidepanel.jelly" />
+    <!-- <st:include page="/hudson/model/View/sidepanel.jelly" /> -->
     <l:main-panel>
       <style>
         table.jobImportPlugin { /* width: 100%; */ }
@@ -41,14 +43,9 @@
           <f:entry title="${%Job.Import.Plugin.Query.Section.RemoteUrl.Title}" field="remoteUrl">
             <f:textbox name="remoteUrl" field="remoteUrl" value="${it.remoteUrl}"/>
           </f:entry>
-          <f:entry title="Username (optional)" field="username">
-            <f:textbox name="username" field="username" value="${it.username}"/>
+          <f:entry title="${%Credentials}" field="credentialId">
+            <c:select xmlns:c="/lib/credentials"/>
           </f:entry>
-          <!-- XXX offer a button to browse to /me/configure or /${username}/configure -->
-          <f:entry title="Password/API Token" field="password">
-            <f:password name="password" field="password" value="${it.password}"/>
-          </f:entry>
-          <!--f:validateButton title="${%Job.Import.Plugin.Query.Section.Validate.Title}" method="doTestConnection" with="remoteUrl"/-->
           <f:block>
             <input type="submit" value="${%Job.Import.Plugin.Query.Section.Submit.Name}" />
           </f:block>
@@ -94,7 +91,7 @@
                 </tr>
                 <j:forEach var="status" items="${it.remoteJobsImportStatus}">
                   <tr>
-                    <td><a target="_blank" href="${rootUrl}/job/${status.key.name}">${status.key.name}</a></td>
+                    <td><a target="_blank" href="${it.rootUrl}/job/${status.key.name}">${status.key.name}</a></td>
                     <td>${status.value.status}</td>
                   </tr>
                 </j:forEach>
