@@ -1,0 +1,12 @@
+<hudson>
+    <job>
+        <description/>
+        <name>folder</name>
+        <url>${baseUrl}/job/folder/</url>
+    </job>
+    <job>
+        <description/>
+        <name>job</name>
+        <url>${baseUrl}/job/job/</url>
+    </job>
+</hudson>
