@@ -1,0 +1,17 @@
+<folder>
+    <job>
+        <description/>
+        <name>aFolder</name>
+        <url>${baseUrl}/job/folder/job/aFolder/</url>
+    </job>
+    <job>
+        <description/>
+        <name>aFreestyleJobInFolder</name>
+        <url>${baseUrl}/job/folder/job/aFreestyleJobInFolder/</url>
+    </job>
+    <job>
+        <description/>
+        <name>aMavenJobInFolder</name>
+        <url>${baseUrl}/job/folder/job/aMavenJobInFolder/</url>
+    </job>
+</folder>
