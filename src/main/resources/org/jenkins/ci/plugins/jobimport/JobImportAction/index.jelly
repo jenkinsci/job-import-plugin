@@ -60,12 +60,14 @@
               <table class="jobImportPlugin" cellpadding="3" cellspacing="3">
                 <tr>
                   <th>Import?</th>
+                  <th>Disable?</th>
                   <th>Name</th>
                   <th>Description</th>
                 </tr>
                 <j:forEach var="job" items="${it.remoteJobs}">
                   <tr>
                     <td><f:checkbox name="jobUrl" value="${job.url}"/></td>
+                    <td><f:checkbox name="disable-${job.url}" /></td>
                     <td><a target="_blank" href="${job.url}">${job.name}</a></td>
                     <td>${job.description}</td>
                   </tr>
