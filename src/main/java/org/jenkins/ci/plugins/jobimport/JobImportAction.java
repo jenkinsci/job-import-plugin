@@ -36,6 +36,7 @@ import hudson.model.Descriptor;
 import hudson.model.Item;
 import hudson.model.RootAction;
 import hudson.model.TopLevelItem;
+import hudson.model.AbstractProject;
 import hudson.security.ACL;
 import hudson.util.FormValidation;
 import java.io.IOException;
@@ -125,7 +126,12 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
 
               try {
                   inputStream = URLUtils.fetchUrl(remoteJob.getUrl() + "/config.xml", username, password);
-                  Jenkins.getInstance().createProjectFromXML(remoteJob.getName(), inputStream);
+                  TopLevelItem topLevelItem = Jenkins.getInstance().createProjectFromXML(remoteJob.getName(), inputStream);
+                  boolean disableProject = request.getParameter("disable-" + jobUrl) != null;
+                  if (topLevelItem instanceof AbstractProject && disableProject) {
+                    AbstractProject project = (AbstractProject)topLevelItem;
+                    project.disable();
+                  }
                   remoteJobsImportStatus.get(remoteJob).setStatus(MessagesUtils.formatSuccess());
               }
 
