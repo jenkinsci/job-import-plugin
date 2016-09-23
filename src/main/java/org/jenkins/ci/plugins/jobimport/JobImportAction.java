@@ -125,7 +125,7 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
               }
 
               try {
-                  inputStream = URLUtils.fetchUrl(remoteJob.getUrl() + "/config.xml", username, password);
+                  inputStream = URLUtils.fetchUrl(getConfigXMLPath(remoteJob.getUrl()), username, password);
                   TopLevelItem topLevelItem = Jenkins.getInstance().createProjectFromXML(remoteJob.getName(), inputStream);
                   boolean disableProject = request.getParameter("disable-" + jobUrl) != null;
                   if (topLevelItem instanceof AbstractProject && disableProject) {
@@ -167,7 +167,15 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
 
     response.forwardToPreviousPage(request);
   }
-
+  
+  private String getConfigXMLPath(String jobURL){
+    if("/".equals(jobURL.substring(jobURL.length()-1, jobURL.length()))){
+      return jobURL + "config.xml";
+    }else{
+      return jobURL + "/config.xml";
+    }
+  }
+  
   public void doQuery(final StaplerRequest request, final StaplerResponse response) throws ServletException,
       IOException {
     remoteJobs.clear();
