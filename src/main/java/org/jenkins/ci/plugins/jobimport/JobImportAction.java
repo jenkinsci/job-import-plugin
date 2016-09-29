@@ -191,14 +191,19 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
 
     try {
       if (StringUtils.isNotEmpty(remoteUrl)) {
-          Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(URLUtils.fetchUrl(remoteUrl + "/api/xml?tree=jobs[name,url,description]", username, password));
+          Document doc;
+          if(remoteUrl.matches("http://(?:.+)/jenkins/job/(?:.+)")){
+              doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(URLUtils.fetchUrl(remoteUrl + "/api/xml?xpath=*/url|*/name|*/description&wrapper=job", username, password));
+          } else {
+              doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(URLUtils.fetchUrl(remoteUrl + "/api/xml?tree=jobs[name,url,description]", username, password));
+          }
           NodeList nl = doc.getElementsByTagName("job");
           for (int i = 0; i < nl.getLength(); i++) {
               Element job = (Element) nl.item(i);
               String desc = text(job, "description");
               remoteJobs.add(new RemoteJob(text(job, "name"), text(job, "url"), desc != null ? desc : ""));
-          }
-      }
+          }          
+       }
     }
 
     catch (Exception e) {
