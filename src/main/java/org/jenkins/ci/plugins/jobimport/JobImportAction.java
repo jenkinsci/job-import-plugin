@@ -24,45 +24,39 @@
 
 package org.jenkins.ci.plugins.jobimport;
 
-import com.cloudbees.plugins.credentials.CredentialsMatchers;
-import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
-import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
-import com.cloudbees.plugins.credentials.domains.DomainRequirement;
-import com.google.common.base.Strings;
 import hudson.Extension;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
-import hudson.model.Item;
 import hudson.model.RootAction;
 import hudson.model.TopLevelItem;
-import hudson.model.AbstractProject;
-import hudson.security.ACL;
 import hudson.util.FormValidation;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.SortedMap;
-import java.util.SortedSet;
-import java.util.TreeMap;
-import java.util.TreeSet;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.servlet.ServletException;
-import javax.xml.parsers.DocumentBuilderFactory;
-
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
+import org.jenkins.ci.plugins.jobimport.CredentialsUtils.NullSafeCredentials;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+
+import javax.servlet.ServletException;
+import javax.xml.parsers.DocumentBuilderFactory;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Arrays;
+import java.util.SortedMap;
+import java.util.SortedSet;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import static org.jenkins.ci.plugins.jobimport.CredentialsUtils.allCredentials;
+import static org.jenkins.ci.plugins.jobimport.RemoteJobUtils.getRemoteJob;
 
 /**
  * @author <a href="mailto:jieryn@gmail.com">Jesse Farinacci</a>
@@ -72,6 +66,11 @@ import org.w3c.dom.NodeList;
 public final class JobImportAction implements RootAction, Describable<JobImportAction> {
 
   private static final Logger LOG = Logger.getLogger(JobImportAction.class.getName());
+
+  static final String URL_NAME= "job-import";
+  static final String REMOTE_URL_PARAM = "remoteUrl";
+  static final String JOB_URL_PARAM = "jobUrl";
+  static final String XML_API_QUERY = "/api/xml?tree=jobs[name,url,description]";
 
   private String remoteUrl;
   private String credentialId;
@@ -85,7 +84,7 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
     credentialId = null;
     remoteJobs.clear();
     remoteJobsImportStatus.clear();
-    response.sendRedirect(Jenkins.getInstance().getRootUrl());
+    response.sendRedirect(Jenkins.getActiveInstance().getRootUrl());
   }
 
   public void doImport(final StaplerRequest request, final StaplerResponse response) throws ServletException,
@@ -93,128 +92,122 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
     remoteJobsImportStatus.clear();
 
     if (isRemoteJobsAvailable()) {
-      if (request.hasParameter("jobUrl")) {
-        for (final String jobUrl : Arrays.asList(request.getParameterValues("jobUrl"))) {
-          final RemoteJob remoteJob = getRemoteJobs(jobUrl);
-          if (remoteJob != null) {
-            if (!remoteJobsImportStatus.containsKey(remoteJob)) {
-              remoteJobsImportStatus.put(remoteJob, new RemoteJobImportStatus(remoteJob));
-            }
-
-            // ---
-
-            if (Jenkins.getInstance().getItem(remoteJob.getName()) != null) {
-              remoteJobsImportStatus.get(remoteJob).setStatus(MessagesUtils.formatFailedDuplicateJobName());
-            }
-
-            else {
-              InputStream inputStream = null;
-
-              String username = "";
-              String password = "";
-
-              if (!Strings.isNullOrEmpty(credentialId)) {
-                StandardUsernamePasswordCredentials cred = CredentialsMatchers.firstOrNull(
-                        allCredentials(),
-                        CredentialsMatchers.withId(credentialId)
-                );
-                if (cred != null) {
-                  username = cred.getUsername();
-                  password = cred.getPassword().getPlainText();
-                }
-              }
-
-              try {
-                  inputStream = URLUtils.fetchUrl(remoteJob.getUrl() + "/config.xml", username, password);
-                  TopLevelItem topLevelItem = Jenkins.getInstance().createProjectFromXML(remoteJob.getName(), inputStream);
-                  boolean disableProject = request.getParameter("disable-" + jobUrl) != null;
-                  if (topLevelItem instanceof AbstractProject && disableProject) {
-                    AbstractProject project = (AbstractProject)topLevelItem;
-                    project.disable();
-                  }
-                  remoteJobsImportStatus.get(remoteJob).setStatus(MessagesUtils.formatSuccess());
-              }
-
-              catch (final Exception e) {
-                LOG.warning("Job Import Failed: " + e.getMessage());
-                if (LOG.isLoggable(Level.INFO)) {
-                  LOG.log(Level.INFO, e.getMessage(), e);
-                }
-
-                // ---
-
-                remoteJobsImportStatus.get(remoteJob).setStatus(MessagesUtils.formatFailedException(e));
-
-                try {
-                    TopLevelItem created = Jenkins.getInstance().getItem(remoteJob.getName());
-                    if (created != null) {
-                        created.delete();
-                    }
-                }
-                catch (final InterruptedException e2) {
-                  // do nothing
-                }
-              }
-
-              finally {
-                IOUtils.closeQuietly(inputStream);
-              }
-            }
-          }
+      if (request.hasParameter(JOB_URL_PARAM)) {
+        for (final String jobUrl : Arrays.asList(request.getParameterValues(JOB_URL_PARAM))) {
+          doImportInternal(jobUrl);
         }
       }
     }
 
     response.forwardToPreviousPage(request);
+  }
+
+  private void doImportInternal(String jobUrl) throws IOException {
+    final RemoteJob remoteJob = getRemoteJob(remoteJobs, jobUrl);
+    if (remoteJob != null) {
+      if (!remoteJobsImportStatus.containsKey(remoteJob)) {
+        remoteJobsImportStatus.put(remoteJob, new RemoteJobImportStatus(remoteJob));
+      }
+
+      // ---
+
+      if (Jenkins.getActiveInstance().getItem(remoteJob.getName()) != null) {
+        remoteJobsImportStatus.get(remoteJob).setStatus(MessagesUtils.formatFailedDuplicateJobName());
+      }
+
+      else {
+        InputStream inputStream = null;
+
+        NullSafeCredentials credentials = CredentialsUtils.getCredentials(credentialId);
+
+        try {
+          inputStream = URLUtils.fetchUrl(remoteJob.getUrl() + "/config.xml", credentials.username, credentials.password);
+          Jenkins.getActiveInstance().createProjectFromXML(remoteJob.getFullName(), inputStream);
+          remoteJobsImportStatus.get(remoteJob).setStatus(MessagesUtils.formatSuccess());
+
+          if (remoteJob.hasChildren()) {
+            for (RemoteJob childJob : remoteJob.getChildren()) {
+              doImportInternal(childJob.getUrl());
+            }
+          }
+          Jenkins.getActiveInstance().doReload();
+        }
+
+        catch (final Exception e) {
+          LOG.warning("Job Import Failed: " + e.getMessage());
+          if (LOG.isLoggable(Level.INFO)) {
+            LOG.log(Level.INFO, e.getMessage(), e);
+          }
+          remoteJobsImportStatus.get(remoteJob).setStatus(MessagesUtils.formatFailedException(e));
+
+          try {
+            TopLevelItem created = Jenkins.getActiveInstance().getItem(remoteJob.getName());
+            if (created != null) {
+              created.delete();
+            }
+          }
+          catch (final InterruptedException e2) {
+            // do nothing
+          }
+        }
+
+        finally {
+          IOUtils.closeQuietly(inputStream);
+        }
+      }
+    }
   }
 
   public void doQuery(final StaplerRequest request, final StaplerResponse response) throws ServletException,
       IOException {
     remoteJobs.clear();
     remoteJobsImportStatus.clear();
-    remoteUrl = request.getParameter("remoteUrl");
-    String username = "";
-    String password = "";
+    remoteUrl = request.getParameter(REMOTE_URL_PARAM);
     credentialId = request.getParameter("_.credentialId");
 
-    if (!Strings.isNullOrEmpty(credentialId)) {
-        StandardUsernamePasswordCredentials cred = CredentialsMatchers.firstOrNull(
-            allCredentials(),
-            CredentialsMatchers.withId(credentialId)
-        );
-        if (cred != null) {
-            username = cred.getUsername();
-            password = cred.getPassword().getPlainText();
-        }
-    }
+    doQueryInternal(null, remoteUrl, CredentialsUtils.getCredentials(credentialId));
 
+    response.forwardToPreviousPage(request);
+  }
 
+  private void doQueryInternal(RemoteJob parent, String url, NullSafeCredentials credentials) {
     try {
-      if (StringUtils.isNotEmpty(remoteUrl)) {
-          Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(URLUtils.fetchUrl(remoteUrl + "/api/xml?tree=jobs[name,url,description]", username, password));
-          NodeList nl = doc.getElementsByTagName("job");
-          for (int i = 0; i < nl.getLength(); i++) {
-              Element job = (Element) nl.item(i);
-              String desc = text(job, "description");
-              remoteJobs.add(new RemoteJob(text(job, "name"), text(job, "url"), desc != null ? desc : ""));
+      if (StringUtils.isNotEmpty(url)) {
+        Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(URLUtils.fetchUrl(url + XML_API_QUERY, credentials.username, credentials.password));
+        NodeList nl = doc.getElementsByTagName("job");
+        for (int i = 0; i < nl.getLength(); i++) {
+          Element job = (Element) nl.item(i);
+          String desc = text(job, "description");
+          String jobUrl = text(job, "url");
+          String name = text(job, "name");
+
+          RemoteJob remoteJob;
+          if (parent == null) {
+            remoteJob = new RemoteJob(name, jobUrl, desc, null);
+            remoteJobs.add(remoteJob);
+          } else {
+            remoteJob = new RemoteJob(name, jobUrl, desc, parent);
+            parent.getChildren().add(remoteJob);
           }
+
+          doQueryInternal(remoteJob, jobUrl, credentials);
+        }
       }
     }
 
     catch (Exception e) {
-        LOG.log(Level.SEVERE, (new StringBuilder()).append("Failed to import job from remote ").append(remoteUrl).toString(), e);
+      LOG.log(Level.SEVERE, (new StringBuilder()).append("Failed to import job from remote ").append(url).toString(), e);
     }
-
-    response.forwardToPreviousPage(request);
   }
+
   private static String text(Element e, String name) {
-      NodeList nl = e.getElementsByTagName(name);
-      if (nl.getLength() == 1) {
-          Element e2 = (Element) nl.item(0);
-          return e2.getTextContent();
-      } else {
-          return null;
-      }
+    NodeList nl = e.getElementsByTagName(name);
+    if (nl.getLength() == 1) {
+      Element e2 = (Element) nl.item(0);
+      return e2.getTextContent();
+    } else {
+      return null;
+    }
   }
 
   public FormValidation doTestConnection(@QueryParameter("remoteUrl") final String remoteUrl) {
@@ -222,7 +215,7 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
   }
 
   public String getRootUrl() {
-      return Jenkins.getInstance().getRootUrl();
+      return Jenkins.getActiveInstance().getRootUrl();
   }
 
   public String getDisplayName() {
@@ -237,18 +230,6 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
     return remoteJobs;
   }
 
-  private RemoteJob getRemoteJobs(final String jobUrl) {
-    if (StringUtils.isNotEmpty(jobUrl)) {
-      for (final RemoteJob remoteJob : remoteJobs) {
-        if (jobUrl.equals(remoteJob.getUrl())) {
-          return remoteJob;
-        }
-      }
-    }
-
-    return null;
-  }
-
   public SortedMap<RemoteJob, RemoteJobImportStatus> getRemoteJobsImportStatus() {
     return remoteJobsImportStatus;
   }
@@ -258,7 +239,7 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
   }
 
   public String getUrlName() {
-    return "/job-import";
+    return "/" + URL_NAME;
   }
 
   public boolean isRemoteJobsAvailable() {
@@ -275,23 +256,11 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
 
   public String getCredentialId() { return credentialId; }
   
-  private static List<StandardUsernamePasswordCredentials> allCredentials() {
-    return CredentialsProvider.lookupCredentials(
-      StandardUsernamePasswordCredentials.class,
-      (Item) null,
-      ACL.SYSTEM,
-      Collections.<DomainRequirement>emptyList()
-    );
-  }
+
 
   @Override
   public Descriptor<JobImportAction> getDescriptor() {
-    // TODO switch to Jenkins.getActiveInstance() once 1.590+ is the baseline
-    Jenkins jenkins = Jenkins.getInstance();
-    if (jenkins == null) {
-      throw new IllegalStateException("Jenkins has not been started, or was already shut down");
-    }
-    return jenkins.getDescriptorOrDie(getClass());
+    return Jenkins.getActiveInstance().getDescriptorOrDie(getClass());
   }
   
   @Extension

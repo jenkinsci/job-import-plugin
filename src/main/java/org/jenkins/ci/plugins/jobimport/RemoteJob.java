@@ -24,61 +24,63 @@
 
 package org.jenkins.ci.plugins.jobimport;
 
-import org.apache.commons.lang.StringEscapeUtils;
-import org.apache.commons.lang.StringUtils;
+import java.util.SortedSet;
+import java.util.TreeSet;
+
+import static org.jenkins.ci.plugins.jobimport.RemoteJobUtils.cleanRemoteString;
+import static org.jenkins.ci.plugins.jobimport.RemoteJobUtils.fullName;
 
 /**
  * @author <a href="mailto:jieryn@gmail.com">Jesse Farinacci</a>
  * @since 1.0
  */
 public final class RemoteJob implements Comparable<RemoteJob> {
-  private String name;
-  private String url;
-  private String description;
+  private final String name;
+  private final String url;
+  private final String description;
+  private final RemoteJob parent;
+  private final SortedSet<RemoteJob> children = new TreeSet<RemoteJob>();
 
-  public RemoteJob() {
-    this((String) null, (String) null, (String) null);
-  }
-
-  public RemoteJob(final String name) {
-    this(name, (String) null, (String) null);
-  }
-
-  public RemoteJob(final String name, final String url) {
-    this(name, url, (String) null);
-  }
-
-  public RemoteJob(final String name, final String url, final String description) {
-    super();
+  public RemoteJob(final String name, final String url, final String description, RemoteJob parent) {
     this.name = name;
     this.url = url;
-    this.description = cleanRemoteString(description);
+    this.description = cleanRemoteString(description != null ? description : "");
+    this.parent = parent;
   }
 
   public String getName() {
     return name;
   }
 
-  public void setName(final String name) {
-    this.name = name;
-  }
-
   public String getUrl() {
     return url;
-  }
-
-  public void setUrl(final String url) {
-    this.url = url;
   }
 
   public String getDescription() {
     return description;
   }
 
-  public void setDescription(final String description) {
-    this.description = cleanRemoteString(description);
+  public RemoteJob getParent() {
+    return parent;
   }
 
+  public SortedSet<RemoteJob> getChildren() {
+    return children;
+  }
+
+  boolean hasChildren() {
+    return !this.children.isEmpty();
+  }
+
+  boolean hasParent() {
+    return this.parent != null;
+  }
+
+  public String getFullName() {
+    return fullName(this);
+  }
+
+  @Override
   public int compareTo(final RemoteJob other) {
     if (this == other) {
       return 0;
@@ -89,15 +91,8 @@ public final class RemoteJob implements Comparable<RemoteJob> {
 
   @Override
   public boolean equals(final Object obj) {
-    if (this == obj) {
-      return true;
-    }
+    return this == obj || obj instanceof RemoteJob && name.equals(((RemoteJob) obj).getName());
 
-    if (!(obj instanceof RemoteJob)) {
-      return false;
-    }
-
-    return name.equals(((RemoteJob) obj).getName());
   }
 
   @Override
@@ -107,13 +102,6 @@ public final class RemoteJob implements Comparable<RemoteJob> {
 
   @Override
   public String toString() {
-    return new StringBuilder().append("RemoteJob: ").append(name).append(", ").append(url).append(", ")
-        .append(description).toString();
-  }
-
-  protected static final int MAX_STRLEN = 4096;
-
-  protected static final String cleanRemoteString(final String string) {
-    return StringUtils.substring(StringEscapeUtils.escapeHtml(string), 0, MAX_STRLEN);
+    return "RemoteJob: " + name + ", " + url + ", " + description;
   }
 }
