@@ -11,8 +11,6 @@ import hudson.security.ACL;
 import java.util.Collections;
 import java.util.List;
 
-import static com.google.inject.internal.guava.base.$Preconditions.checkNotNull;
-
 /**
  * Created by evildethow on 28/06/2016.
  */
@@ -54,6 +52,14 @@ final class CredentialsUtils {
     NullSafeCredentials() {
       this.username = "";
       this.password = "";
+    }
+
+    private <T> T checkNotNull(T reference) {
+      if(reference == null) {
+        throw new NullPointerException();
+      } else {
+        return reference;
+      }
     }
   }
 }
