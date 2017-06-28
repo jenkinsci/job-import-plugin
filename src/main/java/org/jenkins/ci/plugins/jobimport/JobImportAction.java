@@ -132,8 +132,6 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
             }
           }
 
-
-
           try{
             Jenkins instance= Jenkins.getActiveInstance();
             instance.checkPermission(instance.ADMINISTER);
