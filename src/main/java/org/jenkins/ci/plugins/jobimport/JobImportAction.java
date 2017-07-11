@@ -30,6 +30,7 @@ import hudson.model.Describable;
 import hudson.model.Descriptor;
 import hudson.model.RootAction;
 import hudson.model.TopLevelItem;
+import hudson.security.AccessDeniedException2;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
@@ -130,7 +131,16 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
               doImportInternal(childJob.getUrl());
             }
           }
-          Jenkins.getActiveInstance().doReload();
+
+          try{
+            Jenkins instance= Jenkins.getActiveInstance();
+            instance.checkPermission(instance.ADMINISTER);
+            Jenkins.getActiveInstance().doReload();
+          } catch(AccessDeniedException2 ex2){
+            remoteJobsImportStatus.get(remoteJob).setStatus(MessagesUtils.formatSuccessNotReloaded());
+            LOG.log(Level.INFO, "Failed to reload Jenkins config because the user lacks the Overall Administer permission");
+
+          }
         }
 
         catch (final Exception e) {
