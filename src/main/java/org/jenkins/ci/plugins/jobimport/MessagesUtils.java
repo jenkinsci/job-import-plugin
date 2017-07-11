@@ -47,7 +47,7 @@ public final class MessagesUtils {
     return Messages.Job_Import_Plugin_Import_Success();
   }
   public static String formatSuccessNotReloaded() {
-    return Messages.Job_Import_Plugin_Import_Success_Not_Reloaded();
+    return Messages.Job_Import_Plugin_Import_Success_NotReloaded();
   }
   /**
    * Static-only access.
