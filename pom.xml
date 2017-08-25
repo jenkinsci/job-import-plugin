@@ -35,7 +35,7 @@
   </parent>
 
   <artifactId>job-import-plugin</artifactId>
-  <version>1.5-SNAPSHOT</version>
+  <version>1.9-SNAPSHOT</version>
   <packaging>hpi</packaging>
 
   <name>Job Import Plugin</name>
@@ -45,7 +45,7 @@
   <url>http://wiki.jenkins-ci.org/display/JENKINS/Job+Import+Plugin</url>
 
   <properties>
-    <jenkins.version>1.580.3</jenkins.version>
+    <jenkins.version>1.609.1</jenkins.version>
     <java.level>6</java.level>
     <findbugs.failOnError>false</findbugs.failOnError>
   </properties>
@@ -102,6 +102,18 @@
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>credentials</artifactId>
       <version>1.24</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>cloudbees-folder</artifactId>
+      <version>5.12</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.github.tomakehurst</groupId>
+      <artifactId>wiremock</artifactId>
+      <version>1.58</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 
