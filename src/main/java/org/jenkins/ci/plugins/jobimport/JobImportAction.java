@@ -28,24 +28,27 @@ import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
 import hudson.Extension;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
+import hudson.model.Item;
 import hudson.model.RootAction;
 import hudson.model.TopLevelItem;
-import hudson.security.AccessDeniedException2;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
-import org.jenkins.ci.plugins.jobimport.CredentialsUtils.NullSafeCredentials;
+import org.jenkins.ci.plugins.jobimport.client.RestApiClient;
+import org.jenkins.ci.plugins.jobimport.model.RemoteFolder;
+import org.jenkins.ci.plugins.jobimport.model.RemoteItem;
+import org.jenkins.ci.plugins.jobimport.utils.Constants;
+import org.jenkins.ci.plugins.jobimport.utils.CredentialsUtils;
+import org.jenkins.ci.plugins.jobimport.utils.CredentialsUtils.NullSafeCredentials;
+import org.jenkins.ci.plugins.jobimport.utils.RemoteItemUtils;
+import org.jenkins.ci.plugins.jobimport.utils.URLUtils;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
 
 import javax.servlet.ServletException;
-import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
@@ -56,8 +59,7 @@ import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static org.jenkins.ci.plugins.jobimport.CredentialsUtils.allCredentials;
-import static org.jenkins.ci.plugins.jobimport.RemoteJobUtils.getRemoteJob;
+import static org.jenkins.ci.plugins.jobimport.utils.CredentialsUtils.allCredentials;
 
 /**
  * @author <a href="mailto:jieryn@gmail.com">Jesse Farinacci</a>
@@ -68,21 +70,20 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
 
   private static final Logger LOG = Logger.getLogger(JobImportAction.class.getName());
 
-  static final String URL_NAME= "job-import";
-  static final String REMOTE_URL_PARAM = "remoteUrl";
-  static final String JOB_URL_PARAM = "jobUrl";
-  static final String XML_API_QUERY = "/api/xml?tree=jobs[name,url,description]";
-
   private String remoteUrl;
+  private String localFolder;
   private String credentialId;
+  private String recursiveSearch;
 
-  private final SortedSet<RemoteJob> remoteJobs = new TreeSet<RemoteJob>();
-  private final SortedMap<RemoteJob, RemoteJobImportStatus> remoteJobsImportStatus = new TreeMap<RemoteJob, RemoteJobImportStatus>();
+  private final SortedSet<RemoteItem> remoteJobs = new TreeSet<RemoteItem>();
+  private final SortedMap<RemoteItem, RemoteItemImportStatus> remoteJobsImportStatus = new TreeMap<RemoteItem, RemoteItemImportStatus>();
 
   public void doClear(final StaplerRequest request, final StaplerResponse response) throws ServletException,
       IOException {
     remoteUrl = null;
     credentialId = null;
+    localFolder = null;
+    recursiveSearch = null;
     remoteJobs.clear();
     remoteJobsImportStatus.clear();
     response.sendRedirect(Jenkins.getActiveInstance().getRootUrl());
@@ -92,10 +93,12 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
       IOException {
     remoteJobsImportStatus.clear();
 
+    localFolder = request.getParameter(Constants.LOCAL_FOLDER_PARAM);
+
     if (isRemoteJobsAvailable()) {
-      if (request.hasParameter(JOB_URL_PARAM)) {
-        for (final String jobUrl : Arrays.asList(request.getParameterValues(JOB_URL_PARAM))) {
-          doImportInternal(jobUrl);
+      if (request.hasParameter(Constants.JOB_URL_PARAM)) {
+        for (final String jobUrl : Arrays.asList(request.getParameterValues(Constants.JOB_URL_PARAM))) {
+          doImportInternal(jobUrl, localFolder);
         }
       }
     }
@@ -103,35 +106,48 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
     response.forwardToPreviousPage(request);
   }
 
-  private void doImportInternal(String jobUrl) throws IOException {
-    final RemoteJob remoteJob = getRemoteJob(remoteJobs, jobUrl);
+  private void doImportInternal(String jobUrl, String localPath) throws IOException {
+    final RemoteItem remoteJob = RemoteItemUtils.getRemoteJob(remoteJobs, jobUrl);
     if (remoteJob != null) {
       if (!remoteJobsImportStatus.containsKey(remoteJob)) {
-        remoteJobsImportStatus.put(remoteJob, new RemoteJobImportStatus(remoteJob));
+        remoteJobsImportStatus.put(remoteJob, new RemoteItemImportStatus(remoteJob));
       }
 
       // ---
 
-      if (Jenkins.getActiveInstance().getItem(remoteJob.getName()) != null) {
+      if (StringUtils.isNotEmpty(localPath) && Jenkins.getActiveInstance().getItemByFullName(localPath + remoteJob.getName()) != null) {
         remoteJobsImportStatus.get(remoteJob).setStatus(MessagesUtils.formatFailedDuplicateJobName());
-      }
-
-      else {
+      } else if (StringUtils.isEmpty(localPath) && Jenkins.getActiveInstance().getItem(remoteJob.getName()) != null) {
+        remoteJobsImportStatus.get(remoteJob).setStatus(MessagesUtils.formatFailedDuplicateJobName());
+      } else {
         InputStream inputStream = null;
 
         NullSafeCredentials credentials = CredentialsUtils.getCredentials(credentialId);
 
         try {
           inputStream = URLUtils.fetchUrl(remoteJob.getUrl() + "/config.xml", credentials.username, credentials.password);
-          Jenkins.getActiveInstance().createProjectFromXML(remoteJob.getFullName(), inputStream);
-          remoteJobsImportStatus.get(remoteJob).setStatus(MessagesUtils.formatSuccess());
 
-          if (remoteJob.hasChildren()) {
-            for (RemoteJob childJob : remoteJob.getChildren()) {
-              doImportInternal(childJob.getUrl());
-            }
+          final Item newItem;
+          if (StringUtils.isNotEmpty(localPath)) {
+            newItem = Jenkins.getActiveInstance().getItemByFullName(localPath, com.cloudbees.hudson.plugins.folder.Folder.class).
+                    createProjectFromXML(remoteJob.getFullName(), inputStream);
+          } else {
+            newItem = Jenkins.getActiveInstance().
+                    createProjectFromXML(remoteJob.getFullName(), inputStream);
           }
 
+          if (newItem != null) {
+            newItem.save();
+          }
+
+          remoteJobsImportStatus.get(remoteJob).setStatus(MessagesUtils.formatSuccess());
+
+          if (remoteJob.isFolder() && ((RemoteFolder)remoteJob).hasChildren()) {
+            for (RemoteItem childJob : ((RemoteFolder)remoteJob).getChildren()) {
+              doImportInternal(childJob.getUrl(), newItem.getFullName());
+            }
+          }
+          /*
           try{
             Jenkins instance= Jenkins.getActiveInstance();
             instance.checkPermission(instance.ADMINISTER);
@@ -139,8 +155,8 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
           } catch(AccessDeniedException2 ex2){
             remoteJobsImportStatus.get(remoteJob).setStatus(MessagesUtils.formatSuccessNotReloaded());
             LOG.log(Level.INFO, "Failed to reload Jenkins config because the user lacks the Overall Administer permission");
-
           }
+          */
         }
 
         catch (final Exception e) {
@@ -172,52 +188,22 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
       IOException {
     remoteJobs.clear();
     remoteJobsImportStatus.clear();
-    remoteUrl = request.getParameter(REMOTE_URL_PARAM);
+    remoteUrl = request.getParameter(Constants.REMOTE_URL_PARAM);
     credentialId = request.getParameter("_.credentialId");
+
+    recursiveSearch = request.getParameter(Constants.RECURSIVE_PARAM);
 
     doQueryInternal(null, remoteUrl, CredentialsUtils.getCredentials(credentialId));
 
     response.forwardToPreviousPage(request);
   }
 
-  private void doQueryInternal(RemoteJob parent, String url, NullSafeCredentials credentials) {
-    try {
-      if (StringUtils.isNotEmpty(url)) {
-        Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(URLUtils.fetchUrl(url + XML_API_QUERY, credentials.username, credentials.password));
-        NodeList nl = doc.getElementsByTagName("job");
-        for (int i = 0; i < nl.getLength(); i++) {
-          Element job = (Element) nl.item(i);
-          String desc = text(job, "description");
-          String jobUrl = text(job, "url");
-          String name = text(job, "name");
-
-          RemoteJob remoteJob;
-          if (parent == null) {
-            remoteJob = new RemoteJob(name, jobUrl, desc, null);
-            remoteJobs.add(remoteJob);
-          } else {
-            remoteJob = new RemoteJob(name, jobUrl, desc, parent);
-            parent.getChildren().add(remoteJob);
-          }
-
-          doQueryInternal(remoteJob, jobUrl, credentials);
-        }
-      }
-    }
-
-    catch (Exception e) {
-      LOG.log(Level.SEVERE, (new StringBuilder()).append("Failed to import job from remote ").append(url).toString(), e);
-    }
+  private void doQueryInternal(RemoteFolder parent, String url, NullSafeCredentials credentials) {
+    remoteJobs.addAll(RestApiClient.getRemoteItems(parent, url, credentials, isRecursive(recursiveSearch)));
   }
 
-  private static String text(Element e, String name) {
-    NodeList nl = e.getElementsByTagName(name);
-    if (nl.getLength() == 1) {
-      Element e2 = (Element) nl.item(0);
-      return e2.getTextContent();
-    } else {
-      return null;
-    }
+  private boolean isRecursive(String param) {
+    return StringUtils.equals("on", param);
   }
 
   public FormValidation doTestConnection(@QueryParameter("remoteUrl") final String remoteUrl) {
@@ -236,11 +222,11 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
     return "/images/32x32/setting.png";
   }
 
-  public SortedSet<RemoteJob> getRemoteJobs() {
+  public SortedSet<RemoteItem> getRemoteJobs() {
     return remoteJobs;
   }
 
-  public SortedMap<RemoteJob, RemoteJobImportStatus> getRemoteJobsImportStatus() {
+  public SortedMap<RemoteItem, RemoteItemImportStatus> getRemoteJobsImportStatus() {
     return remoteJobsImportStatus;
   }
 
@@ -249,7 +235,7 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
   }
 
   public String getUrlName() {
-    return "/" + URL_NAME;
+    return "/" + Constants.URL_NAME;
   }
 
   public boolean isRemoteJobsAvailable() {
@@ -265,8 +251,14 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
   }
 
   public String getCredentialId() { return credentialId; }
-  
 
+  public String getLocalFolder() {
+    return localFolder;
+  }
+
+  public void setLocalFolder(String localFolder) {
+    this.localFolder = localFolder;
+  }
 
   @Override
   public Descriptor<JobImportAction> getDescriptor() {

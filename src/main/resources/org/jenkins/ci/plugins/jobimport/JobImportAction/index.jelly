@@ -43,6 +43,9 @@
           <f:entry title="${%Job.Import.Plugin.Query.Section.RemoteUrl.Title}" field="remoteUrl">
             <f:textbox name="remoteUrl" field="remoteUrl" value="${it.remoteUrl}"/>
           </f:entry>
+          <f:entry  title="${%Job.Import.Plugin.Query.Section.RecursiveSearch.Title}" field="recursiveSearch">
+            <f:checkbox name="recursiveSearch" value="${it.recursiveSearch}" default="false"/>
+          </f:entry>
           <f:entry title="${%Credentials}" field="credentialId">
             <c:select xmlns:c="/lib/credentials"/>
           </f:entry>
@@ -57,6 +60,9 @@
         <f:form name="import" action="import" method="post">
           <f:section title="${%Job.Import.Plugin.Import.Section.Title}">
             <f:block>
+              <f:entry title="${%Job.Import.Plugin.Import.Section.LocalFolder.Title}" field="localFolder">
+                <f:textbox name="localFolder" field="localFolder" value="${it.localFolder}"/>
+              </f:entry>
               <table class="jobImportPlugin" cellpadding="3" cellspacing="3">
                 <tr>
                   <th>Import?</th>
@@ -68,7 +74,7 @@
                   <tr>
                     <td><f:checkbox name="jobUrl" value="${job.url}"/></td>
                     <td><f:checkbox name="disable-${job.url}" /></td>
-                    <td><a target="_blank" href="${job.url}">${job.name}</a></td>
+                    <td><a target="_blank" href="${job.url}">${job.fullName}</a></td>
                     <td>${job.description}</td>
                   </tr>
                 </j:forEach>

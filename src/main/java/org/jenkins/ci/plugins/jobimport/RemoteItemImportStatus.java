@@ -24,33 +24,35 @@
 
 package org.jenkins.ci.plugins.jobimport;
 
+import org.jenkins.ci.plugins.jobimport.model.RemoteItem;
+
 /**
  * @author <a href="mailto:jieryn@gmail.com">Jesse Farinacci</a>
  * @since 1.0
  */
-public final class RemoteJobImportStatus implements Comparable<RemoteJobImportStatus> {
-  private RemoteJob remoteJob;
+public final class RemoteItemImportStatus implements Comparable<RemoteItemImportStatus> {
+  private RemoteItem remoteJob;
   private String    status;
 
-  public RemoteJobImportStatus() {
-    this((RemoteJob) null, (String) null);
+  public RemoteItemImportStatus() {
+    this((RemoteItem) null, (String) null);
   }
 
-  public RemoteJobImportStatus(final RemoteJob remoteJob) {
+  public RemoteItemImportStatus(final RemoteItem remoteJob) {
     this(remoteJob, (String) null);
   }
 
-  public RemoteJobImportStatus(final RemoteJob remoteJob, final String status) {
+  public RemoteItemImportStatus(final RemoteItem remoteJob, final String status) {
     super();
     this.remoteJob = remoteJob;
     this.status = status;
   }
 
-  public RemoteJob getRemoteJob() {
+  public RemoteItem getRemoteJob() {
     return remoteJob;
   }
 
-  public void setRemoteJob(final RemoteJob remoteJob) {
+  public void setRemoteJob(final RemoteItem remoteJob) {
     this.remoteJob = remoteJob;
   }
 
@@ -62,7 +64,7 @@ public final class RemoteJobImportStatus implements Comparable<RemoteJobImportSt
     this.status = status;
   }
 
-  public int compareTo(final RemoteJobImportStatus other) {
+  public int compareTo(final RemoteItemImportStatus other) {
     if (this == other) {
       return 0;
     }
@@ -76,11 +78,11 @@ public final class RemoteJobImportStatus implements Comparable<RemoteJobImportSt
       return true;
     }
 
-    if (!(obj instanceof RemoteJobImportStatus)) {
+    if (!(obj instanceof RemoteItemImportStatus)) {
       return false;
     }
 
-    return remoteJob.equals(((RemoteJobImportStatus) obj).getRemoteJob());
+    return remoteJob.equals(((RemoteItemImportStatus) obj).getRemoteJob());
   }
 
   @Override
@@ -90,7 +92,7 @@ public final class RemoteJobImportStatus implements Comparable<RemoteJobImportSt
 
   @Override
   public String toString() {
-    return new StringBuilder().append("RemoteJobImportStatus: ").append(remoteJob).append(", ").append(status)
+    return new StringBuilder().append("RemoteItemImportStatus: ").append(remoteJob).append(", ").append(status)
         .toString();
   }
 }
