@@ -11,7 +11,7 @@ import static java.io.File.separator;
 /**
  * Created by evildethow on 30/06/2016.
  */
-public final class RemoteJenkins {
+final class RemoteJenkins {
 
   private static final String BASE_URL = "http://localhost";
 
@@ -49,7 +49,7 @@ public final class RemoteJenkins {
 
   private final String url;
 
-  public RemoteJenkins(int port) {
+  RemoteJenkins(int port) {
     this.url = BASE_URL + ":" + port;
 
     stubQueryResponses();
@@ -112,29 +112,33 @@ public final class RemoteJenkins {
             .withBody(template)));
   }
 
-  public String getUrl() {
+  String getUrl() {
     return url;
   }
 
-  public void verifyQueried() {
+  void verifyQueried() {
     verifyGetRequest(TOP_LVL_QUERY);
-    //verifyGetRequest(SECOND_LVL_FOLDER_QUERY);
-    //verifyGetRequest(SECOND_LVL_JOB_QUERY);
-    //verifyGetRequest(THIRD_LVL_A_FOLDER_QUERY);
-    //verifyGetRequest(THIRD_LVL_A_FREESTYLE_JOB_IN_FOLDER_QUERY);
-    //verifyGetRequest(THIRD_LVL_A_MAVEN_JOB_IN_FOLDER_QUERY);
-    //verifyGetRequest(FOURTH_LVL_B_FREESTYLE_JOB_IN_A_FOLDER_QUERY);
-    //verifyGetRequest(FOURTH_LVL_B_MAVEN_JOB_IN_A_FOLDER_QUERY);
   }
 
-  public void verifyImported() {
+  void verifyQueriedRecursive() {
+    verifyGetRequest(TOP_LVL_QUERY);
+    verifyGetRequest(SECOND_LVL_FOLDER_QUERY);
+    verifyGetRequest(THIRD_LVL_A_FOLDER_QUERY);
+  }
+
+  void verifyImported() {
     verifyGetRequest(FOLDER_CONFIG_QUERY);
     verifyGetRequest(JOB_CONFIG_QUERY);
-    //verifyGetRequest(A_FOLDER_CONFIG_QUERY);
-    //verifyGetRequest(A_FREESTYLE_JOB_IN_FOLDER_CONFIG_QUERY);
-    //verifyGetRequest(A_MAVEN_JOB_IN_FOLDER_CONFIG_QUERY);
-    //verifyGetRequest(B_FREESTYLE_JOB_IN_FOLDER_CONFIG_QUERY);
-    //verifyGetRequest(B_MAVEN_JOB_IN_FOLDER_CONFIG_QUERY);
+  }
+
+  void verifyImportedRecursive() {
+    verifyGetRequest(FOLDER_CONFIG_QUERY);
+    verifyGetRequest(JOB_CONFIG_QUERY);
+    verifyGetRequest(A_FOLDER_CONFIG_QUERY);
+    verifyGetRequest(A_FREESTYLE_JOB_IN_FOLDER_CONFIG_QUERY);
+    verifyGetRequest(A_MAVEN_JOB_IN_FOLDER_CONFIG_QUERY);
+    verifyGetRequest(B_FREESTYLE_JOB_IN_FOLDER_CONFIG_QUERY);
+    verifyGetRequest(B_MAVEN_JOB_IN_FOLDER_CONFIG_QUERY);
   }
   
   private void verifyGetRequest(String url) {
