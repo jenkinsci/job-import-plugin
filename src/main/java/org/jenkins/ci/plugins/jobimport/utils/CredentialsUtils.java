@@ -1,4 +1,4 @@
-package org.jenkins.ci.plugins.jobimport;
+package org.jenkins.ci.plugins.jobimport.utils;
 
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
@@ -14,13 +14,13 @@ import java.util.List;
 /**
  * Created by evildethow on 28/06/2016.
  */
-final class CredentialsUtils {
+public final class CredentialsUtils {
 
   private CredentialsUtils() {
     throw new UnsupportedOperationException("Cannot instantiate utility class");
   }
 
-  static NullSafeCredentials getCredentials(String credentialId) {
+  public static NullSafeCredentials getCredentials(String credentialId) {
     if (!Strings.isNullOrEmpty(credentialId)) {
       StandardUsernamePasswordCredentials cred = CredentialsMatchers.firstOrNull(allCredentials(), CredentialsMatchers.withId(credentialId));
       if (cred != null) {
@@ -30,7 +30,7 @@ final class CredentialsUtils {
     return new NullSafeCredentials();
   }
 
-  static List<StandardUsernamePasswordCredentials> allCredentials() {
+  public static List<StandardUsernamePasswordCredentials> allCredentials() {
     return CredentialsProvider.lookupCredentials(
         StandardUsernamePasswordCredentials.class,
         (Item) null,
@@ -39,10 +39,10 @@ final class CredentialsUtils {
     );
   }
 
-  static final class NullSafeCredentials {
+  public static final class NullSafeCredentials {
 
-    final String username;
-    final String password;
+    public final String username;
+    public final String password;
 
     NullSafeCredentials(String username, String password) {
       this.username = checkNotNull(username);
