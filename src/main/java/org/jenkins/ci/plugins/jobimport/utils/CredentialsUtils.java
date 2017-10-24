@@ -30,6 +30,7 @@ public final class CredentialsUtils {
     return new NullSafeCredentials();
   }
 
+  @Deprecated
   public static List<StandardUsernamePasswordCredentials> allCredentials() {
     return CredentialsProvider.lookupCredentials(
         StandardUsernamePasswordCredentials.class,
