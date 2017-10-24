@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.jenkins.ci.plugins.jobimport;
+package org.jenkins.ci.plugins.jobimport.utils;
 
 import java.io.IOException;
 import java.io.InputStream;

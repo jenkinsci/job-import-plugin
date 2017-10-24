@@ -2,11 +2,9 @@ package org.jenkins.ci.plugins.jobimport;
 
 import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
 import com.gargoylesoftware.htmlunit.html.*;
+import org.jenkins.ci.plugins.jobimport.utils.Constants;
 import org.jvnet.hudson.test.JenkinsRule;
 
-import static org.jenkins.ci.plugins.jobimport.JobImportAction.JOB_URL_PARAM;
-import static org.jenkins.ci.plugins.jobimport.JobImportAction.REMOTE_URL_PARAM;
-import static org.jenkins.ci.plugins.jobimport.JobImportAction.URL_NAME;
 
 /**
  * Created by evildethow on 30/06/2016.
@@ -19,18 +17,18 @@ public final class JobImportClient {
   private HtmlPage currentPage;
 
   public JobImportClient(JenkinsRule.WebClient webClient) throws Exception {
-    this.currentPage = webClient.goTo(URL_NAME);
+    this.currentPage = webClient.goTo(Constants.URL_NAME);
   }
 
   public void doQuerySubmit(String remoteUrl) throws Exception {
-    HtmlInput input = (HtmlInput) currentPage.getElementsByName(REMOTE_URL_PARAM).get(0);
+    HtmlInput input = (HtmlInput) currentPage.getElementsByName(Constants.REMOTE_URL_PARAM).get(0);
     input.setValueAttribute(remoteUrl);
     HtmlForm form = currentPage.getFormByName("query");
     currentPage = form.getInputByValue("Query!").click();
   }
 
   public void selectJobs() {
-    for (DomElement checkBox : currentPage.getElementsByName(JOB_URL_PARAM)) {
+    for (DomElement checkBox : currentPage.getElementsByName(Constants.JOB_URL_PARAM)) {
       ((HtmlCheckBoxInput) checkBox).setChecked(true);
     }
   }
