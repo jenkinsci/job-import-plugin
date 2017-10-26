@@ -281,13 +281,18 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
       return new StandardListBoxModel()
               .includeEmptyValue()
               .includeMatchingAs(
+                      Jenkins.getAuthentication(),
+                      Jenkins.getInstance(),
+                      StandardUsernamePasswordCredentials.class,
+                      Collections.<DomainRequirement>emptyList(),
+                      CredentialsMatchers.always()
+              ).includeMatchingAs(
                       ACL.SYSTEM,
-                      (Item) null,
+                      Jenkins.getInstance(),
                       StandardUsernamePasswordCredentials.class,
                       Collections.<DomainRequirement>emptyList(),
                       CredentialsMatchers.always()
               );
-
     }
   }
 }
