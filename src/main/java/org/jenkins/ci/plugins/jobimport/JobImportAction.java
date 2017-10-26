@@ -24,13 +24,18 @@
 
 package org.jenkins.ci.plugins.jobimport;
 
+import com.cloudbees.plugins.credentials.CredentialsMatchers;
+import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
+import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
+import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import hudson.Extension;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
 import hudson.model.Item;
 import hudson.model.RootAction;
 import hudson.model.TopLevelItem;
+import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
@@ -52,6 +57,7 @@ import javax.servlet.ServletException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
@@ -272,9 +278,21 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
     public String getDisplayName() { return ""; }
 
     public ListBoxModel doFillCredentialIdItems() {
-      return new StandardUsernameListBoxModel()
-              .withEmptySelection()
-              .withAll(allCredentials());
+      return new StandardListBoxModel()
+              .includeEmptyValue()
+              .includeMatchingAs(
+                      Jenkins.getAuthentication(),
+                      Jenkins.getInstance(),
+                      StandardUsernamePasswordCredentials.class,
+                      Collections.<DomainRequirement>emptyList(),
+                      CredentialsMatchers.always()
+              ).includeMatchingAs(
+                      ACL.SYSTEM,
+                      Jenkins.getInstance(),
+                      StandardUsernamePasswordCredentials.class,
+                      Collections.<DomainRequirement>emptyList(),
+                      CredentialsMatchers.always()
+              );
     }
   }
 }
