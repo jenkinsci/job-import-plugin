@@ -13,6 +13,11 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMoc
  */
 public class JobImportActionTest {
 
+  private static final class RecursiveSearch {
+    private static final boolean ON = true;
+    private static final boolean OFF = false;
+  }
+
   @Rule
   public JenkinsRule jenkinsRule = new JenkinsRule();
 
@@ -30,7 +35,7 @@ public class JobImportActionTest {
 
   @Test
   public void doImport() throws Exception {
-    client.doQuerySubmit(remoteJenkins.getUrl());
+    client.doQuerySubmit(remoteJenkins.getUrl(), RecursiveSearch.OFF);
 
     remoteJenkins.verifyQueried();
 
@@ -38,5 +43,17 @@ public class JobImportActionTest {
     client.doImportSubmit();
 
     remoteJenkins.verifyImported();
+  }
+
+  @Test
+  public void doImportRecursive() throws Exception {
+    client.doQuerySubmit(remoteJenkins.getUrl(), RecursiveSearch.ON);
+
+    remoteJenkins.verifyQueriedRecursive();
+
+    client.selectJobs();
+    client.doImportSubmit();
+
+    remoteJenkins.verifyImportedRecursive();
   }
 }

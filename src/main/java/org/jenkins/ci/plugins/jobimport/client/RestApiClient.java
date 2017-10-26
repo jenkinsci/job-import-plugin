@@ -22,11 +22,6 @@ public final class RestApiClient {
 
     private static final Logger LOG = Logger.getLogger(RestApiClient.class.getName());
 
-
-    public static List<RemoteItem> getRemoteItems(String url, CredentialsUtils.NullSafeCredentials credentials, boolean recursiveSearch) {
-        return getRemoteItems(null, url, credentials, recursiveSearch);
-    }
-
     public static List<RemoteItem> getRemoteItems(RemoteFolder parent, String url, CredentialsUtils.NullSafeCredentials credentials, boolean recursiveSearch) {
         List<RemoteItem> items = new ArrayList<>();
         try {
@@ -55,7 +50,7 @@ public final class RestApiClient {
                     }
 
                     if(folder && recursiveSearch) {
-                        items.addAll(getRemoteItems((RemoteFolder) item, jobUrl, credentials, recursiveSearch));
+                        items.addAll(getRemoteItems((RemoteFolder) item, jobUrl, credentials, true));
                     }
 
                 }

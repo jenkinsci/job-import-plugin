@@ -1,5 +1,5 @@
 <folder>
-    <job>
+    <job _class="com.cloudbees.hudson.plugins.folder.Folder">
         <description/>
         <name>aFolder</name>
         <url>${baseUrl}/job/folder/job/aFolder/</url>

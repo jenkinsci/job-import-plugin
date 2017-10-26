@@ -9,31 +9,35 @@ import org.jvnet.hudson.test.JenkinsRule;
 /**
  * Created by evildethow on 30/06/2016.
  */
-public final class JobImportClient {
+final class JobImportClient {
 
   private static final int IMPORT_SUBMIT_RETRY = 5;
   private static final long IMPORT_SUBMIT_RETRY_WAIT_TIME = 1000L;
 
   private HtmlPage currentPage;
 
-  public JobImportClient(JenkinsRule.WebClient webClient) throws Exception {
+  JobImportClient(JenkinsRule.WebClient webClient) throws Exception {
     this.currentPage = webClient.goTo(Constants.URL_NAME);
   }
 
-  public void doQuerySubmit(String remoteUrl) throws Exception {
-    HtmlInput input = (HtmlInput) currentPage.getElementsByName(Constants.REMOTE_URL_PARAM).get(0);
-    input.setValueAttribute(remoteUrl);
+  void doQuerySubmit(String remoteUrl, boolean recursiveSearch) throws Exception {
+    HtmlInput remoteUrlInput = (HtmlInput) currentPage.getElementsByName(Constants.REMOTE_URL_PARAM).get(0);
+    remoteUrlInput.setValueAttribute(remoteUrl);
+
+    HtmlCheckBoxInput recursiveSearchInput = (HtmlCheckBoxInput) currentPage.getElementsByName(Constants.RECURSIVE_PARAM).get(0);
+    recursiveSearchInput.setChecked(recursiveSearch);
+
     HtmlForm form = currentPage.getFormByName("query");
     currentPage = form.getInputByValue("Query!").click();
   }
 
-  public void selectJobs() {
+  void selectJobs() {
     for (DomElement checkBox : currentPage.getElementsByName(Constants.JOB_URL_PARAM)) {
       ((HtmlCheckBoxInput) checkBox).setChecked(true);
     }
   }
 
-  public void doImportSubmit() throws Exception {
+  void doImportSubmit() throws Exception {
     doImportSubmitWithRetry(IMPORT_SUBMIT_RETRY);
   }
 
