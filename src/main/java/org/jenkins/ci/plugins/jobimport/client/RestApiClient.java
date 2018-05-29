@@ -27,7 +27,7 @@ public final class RestApiClient {
         try {
             if (StringUtils.isNotEmpty(url)) {
                 Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(
-                        URLUtils.fetchUrl(url + Constants.XML_API_QUERY, credentials.username, credentials.password));
+                        URLUtils.fetchUrl(URLUtils.safeURL(url , Constants.XML_API_QUERY), credentials.username, credentials.password));
                 NodeList nl = doc.getElementsByTagName("job");
 
                 for (int i = 0; i < nl.getLength(); i++) {
@@ -60,6 +60,7 @@ public final class RestApiClient {
         }
         return items;
     }
+
 
 
 }

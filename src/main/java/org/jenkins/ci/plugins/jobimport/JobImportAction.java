@@ -117,7 +117,7 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
 
     final SortedSet<RemoteItem> remoteJobs = new TreeSet<RemoteItem>();
     final String remoteFolder = request.getParameter("remoteFolder");
-    final String remoteUrl = remoteJenkins.getUrl() + remoteFolder;
+    final String remoteUrl = URLUtils.safeURL(remoteJenkins.getUrl(), remoteFolder);
     final String recursiveSearch = request.getParameter(Constants.RECURSIVE_PARAM);
     doQueryInternal(null, remoteUrl, CredentialsUtils.getCredentials(credentialId), recursiveSearch, remoteJobs);
 
@@ -154,7 +154,7 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
     }
 
     final String credentialId = remoteJenkins.getDefaultCredentialsId();
-    final String remoteUrl = remoteJenkins.getUrl() + remoteFolder;
+    final String remoteUrl = URLUtils.safeURL(remoteJenkins.getUrl(), remoteFolder);
     final String recursiveSearch = request.getParameter(Constants.RECURSIVE_PARAM);
 
     doQueryInternal(null, remoteUrl, CredentialsUtils.getCredentials(credentialId), recursiveSearch, remoteJobs);
@@ -196,7 +196,7 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
           inputStream = URLUtils.fetchUrl(remoteJob.getUrl() + "/config.xml", credentials.username, credentials.password);
 
           final Item newItem;
-          if (StringUtils.isNotEmpty(localPath)) {
+          if (StringUtils.isNotEmpty(localPath) && !StringUtils.equals("/", localPath.trim())) {
             newItem = Jenkins.get().getItemByFullName(localPath, com.cloudbees.hudson.plugins.folder.Folder.class).
                     createProjectFromXML(remoteJob.getFullName(), inputStream);
           } else {
@@ -209,7 +209,8 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
             if (installPlugins ) {
               Jenkins instance = Jenkins.get();
               instance.getAuthorizationStrategy().getACL(instance).checkPermission(Jenkins.ADMINISTER);
-              PluginManager.createDefault(Jenkins.get()).prevalidateConfig(inputStream);
+              PluginManager.createDefault(Jenkins.get()).prevalidateConfig(
+                      URLUtils.fetchUrl(remoteJob.getUrl() + "/config.xml", credentials.username, credentials.password));
             }
 
             newItem.save();
