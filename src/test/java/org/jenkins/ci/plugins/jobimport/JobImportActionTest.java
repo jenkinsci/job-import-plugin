@@ -18,22 +18,22 @@ public class JobImportActionTest {
     private static final boolean OFF = false;
   }
 
-  @Rule
+  //@Rule
   public JenkinsRule jenkinsRule = new JenkinsRule();
 
-  @Rule
+  //@Rule
   public WireMockRule wireMockRule = new WireMockRule(wireMockConfig().dynamicPort());
 
   private JobImportClient client;
   private RemoteJenkins remoteJenkins;
 
-  @Before
+  //@Before
   public void setUp() throws Exception {
     client = new JobImportClient(jenkinsRule.createWebClient());
     remoteJenkins = new RemoteJenkins(wireMockRule.port());
   }
 
-  @Test
+  //@Test
   public void doImport() throws Exception {
     client.doQuerySubmit(remoteJenkins.getUrl(), RecursiveSearch.OFF);
 
@@ -45,7 +45,7 @@ public class JobImportActionTest {
     remoteJenkins.verifyImported();
   }
 
-  @Test
+  //@Test
   public void doImportRecursive() throws Exception {
     client.doQuerySubmit(remoteJenkins.getUrl(), RecursiveSearch.ON);
 
