@@ -26,9 +26,7 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
   <j:set var="instance" value="${it}"/>
   <j:set var="descriptor" value="${instance.descriptor}"/>
-  <j:getStatic var="permission" className="hudson.model.Item" field="CREATE"/>
-  <l:layout permission="${permission}" title="${%Job.Import.Plugin.Title}">
-    <!-- <st:include page="/hudson/model/View/sidepanel.jelly" /> -->
+  <l:layout permission="${it.JOB_IMPORT}" title="${%Job.Import.Plugin.Title}">
     <l:main-panel>
       <style>
         table.jobImportPlugin { /* width: 100%; */ }

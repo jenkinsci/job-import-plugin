@@ -36,6 +36,9 @@ import hudson.model.Item;
 import hudson.model.RootAction;
 import hudson.model.TopLevelItem;
 import hudson.security.ACL;
+import hudson.security.Permission;
+import hudson.security.PermissionGroup;
+import hudson.security.PermissionScope;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
@@ -77,6 +80,13 @@ import static org.jenkins.ci.plugins.jobimport.utils.CredentialsUtils.allCredent
  */
 @Extension
 public final class JobImportAction implements RootAction, Describable<JobImportAction> {
+
+  public static final PermissionGroup JOB_IMPORT_PERMISSIONS =
+          new PermissionGroup(JobImportAction.class, Messages._Job_Import_Plugin_PermissionGroup());
+
+  public static final Permission JOB_IMPORT =
+          new Permission(JOB_IMPORT_PERMISSIONS, "JobImport", Messages._Job_Import_Plugin_Permission(),
+                  Jenkins.ADMINISTER, PermissionScope.JENKINS);
 
   private static final Logger LOG = Logger.getLogger(JobImportAction.class.getName());
 
