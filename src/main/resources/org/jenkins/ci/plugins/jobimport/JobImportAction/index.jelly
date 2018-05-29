@@ -38,24 +38,27 @@
       <h1>${%Job.Import.Plugin.Title}</h1>
       <h2>${%Job.Import.Plugin.Description}</h2>
       <br/>
-      <f:form name="query" action="query" method="get">
-        <f:section title="${%Job.Import.Plugin.Query.Section.Title}">
-          <f:entry title="${%Job.Import.Plugin.Query.Section.RemoteUrl.Title}" field="remoteUrl">
-            <f:textbox name="remoteUrl" field="remoteUrl" value="${it.remoteUrl}"/>
-          </f:entry>
-          <f:entry  title="${%Job.Import.Plugin.Query.Section.RecursiveSearch.Title}" field="recursiveSearch">
-            <f:checkbox name="recursiveSearch" value="${it.recursiveSearch}" default="false"/>
-          </f:entry>
-          <f:entry title="${%Credentials}" field="credentialId">
-            <c:select xmlns:c="/lib/credentials"/>
-          </f:entry>
-          <f:block>
-            <input type="submit" value="${%Job.Import.Plugin.Query.Section.Submit.Name}" />
-          </f:block>
-        </f:section>
-      </f:form>
-      <j:if test="${it.remoteJobsAvailable}">
-        <j:if test="${!it.remoteJobsImportStatusAvailable}">
+      <j:if test="${!remoteJobsAvailable}">
+          <f:form name="query" action="query" method="post">
+            <f:section title="${%Job.Import.Plugin.Query.Section.Title}">
+              <f:entry title="${%Jenkins Server}" field="jenkinsSites">
+                <f:select/>
+              </f:entry>
+              <f:entry title="${%Remote folder}" field="remoteFolder">
+                <f:textbox name="remoteFolder" field="remoteFolder" value="${remoteFolder}"/>
+              </f:entry>
+              <f:entry  title="${%Job.Import.Plugin.Query.Section.RecursiveSearch.Title}" field="recursiveSearch">
+                <f:checkbox name="recursiveSearch" value="${recursiveSearch}" default="false"/>
+              </f:entry>
+
+              <f:block>
+                <input type="submit" value="${%Job.Import.Plugin.Query.Section.Submit.Name}" />
+              </f:block>
+            </f:section>
+          </f:form>
+      </j:if>
+      <j:if test="${remoteJobsAvailable}">
+        <j:if test="${!remoteJobsImportStatusAvailable}">
         <br/>
         <f:form name="import" action="import" method="post">
           <f:section title="${%Job.Import.Plugin.Import.Section.Title}">
@@ -70,7 +73,7 @@
                   <th>Name</th>
                   <th>Description</th>
                 </tr>
-                <j:forEach var="job" items="${it.remoteJobs}">
+                <j:forEach var="job" items="${remoteJobs}">
                   <tr>
                     <td><f:checkbox name="jobUrl" value="${job.url}"/></td>
                     <td><f:checkbox name="disable-${job.url}" /></td>
@@ -79,15 +82,22 @@
                   </tr>
                 </j:forEach>
               </table>
+              <input type="hidden" name="remoteJobsAvailable" value="${remoteJobsAvailable}" />
+              <input type="hidden" name="remoteJenkins" value="${remoteJenkins}" />
+              <input type="hidden" name="recursiveSearch" value="${recursiveSearch}" />
+              <input type="hidden" name="remoteFolder" value="${remoteFolder}" />
             </f:block>
             <f:block>
               <input type="submit" value="${%Job.Import.Plugin.Import.Section.Submit.Name}"/>
             </f:block>
           </f:section>
         </f:form>
+        <f:form name="clear" action="clear" method="post">
+            <input type="submit" value="Cancel"/>
+        </f:form>
         </j:if>
       </j:if>
-      <j:if test="${it.remoteJobsImportStatusAvailable}">
+      <j:if test="${remoteJobsImportStatusAvailable}">
         <br/>
         <f:form name="clear" action="clear" method="post">
           <f:section title="${%Job.Import.Plugin.Status.Section.Title}">
@@ -97,7 +107,7 @@
                   <th>Name</th>
                   <th>Status</th>
                 </tr>
-                <j:forEach var="status" items="${it.remoteJobsImportStatus}">
+                <j:forEach var="status" items="${remoteJobsImportStatus}">
                   <tr>
                     <td><a target="_blank" href="${it.rootUrl}/job/${status.key.name}">${status.key.name}</a></td>
                     <td>${status.value.status}</td>

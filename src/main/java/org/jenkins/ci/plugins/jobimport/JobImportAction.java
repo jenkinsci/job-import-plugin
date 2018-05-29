@@ -39,9 +39,11 @@ import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
+import net.sf.json.JSONObject;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jenkins.ci.plugins.jobimport.client.RestApiClient;
+import org.jenkins.ci.plugins.jobimport.model.JenkinsSite;
 import org.jenkins.ci.plugins.jobimport.model.RemoteFolder;
 import org.jenkins.ci.plugins.jobimport.model.RemoteItem;
 import org.jenkins.ci.plugins.jobimport.utils.Constants;
@@ -49,6 +51,7 @@ import org.jenkins.ci.plugins.jobimport.utils.CredentialsUtils;
 import org.jenkins.ci.plugins.jobimport.utils.CredentialsUtils.NullSafeCredentials;
 import org.jenkins.ci.plugins.jobimport.utils.RemoteItemUtils;
 import org.jenkins.ci.plugins.jobimport.utils.URLUtils;
+import org.kohsuke.stapler.ForwardToView;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
@@ -58,6 +61,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
@@ -76,43 +80,89 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
 
   private static final Logger LOG = Logger.getLogger(JobImportAction.class.getName());
 
-  private String remoteUrl;
-  private String localFolder;
-  private String credentialId;
-  private String recursiveSearch;
-
-  private final SortedSet<RemoteItem> remoteJobs = new TreeSet<RemoteItem>();
-  private final SortedMap<RemoteItem, RemoteItemImportStatus> remoteJobsImportStatus = new TreeMap<RemoteItem, RemoteItemImportStatus>();
-
-  public void doClear(final StaplerRequest request, final StaplerResponse response) throws ServletException,
-      IOException {
-    remoteUrl = null;
-    credentialId = null;
-    localFolder = null;
-    recursiveSearch = null;
-    remoteJobs.clear();
-    remoteJobsImportStatus.clear();
-    response.sendRedirect(Jenkins.getActiveInstance().getRootUrl());
+  public void doClear(final StaplerRequest request, final StaplerResponse response)
+          throws ServletException, IOException {
+    response.sendRedirect(Jenkins.get().getRootUrl() + getUrlName());
   }
 
-  public void doImport(final StaplerRequest request, final StaplerResponse response) throws ServletException,
-      IOException {
-    remoteJobsImportStatus.clear();
+  public void doImport(final StaplerRequest request, final StaplerResponse response)
+          throws ServletException, IOException {
+    final SortedMap<RemoteItem, RemoteItemImportStatus> remoteJobsImportStatus = new TreeMap<RemoteItem, RemoteItemImportStatus>();
 
-    localFolder = request.getParameter(Constants.LOCAL_FOLDER_PARAM);
+    final String localFolder = request.getParameter(Constants.LOCAL_FOLDER_PARAM);
+    final String remoteJobsAvailable = (String)request.getParameter("remoteJobsAvailable");
 
-    if (isRemoteJobsAvailable()) {
+    final String site = (String)request.getParameter("remoteJenkins");
+
+    JenkinsSite remoteJenkins = new JenkinsSite("", "");
+    for (JenkinsSite js : JobImportGlobalConfig.get().getSites()) {
+      if ((js.getName() + "-" + js.getUrl() + "-" + js.getDefaultCredentialsId()).equals(site)) {
+        remoteJenkins = js;
+        break;
+      }
+    }
+
+    final String credentialId = remoteJenkins.getDefaultCredentialsId();
+
+    final SortedSet<RemoteItem> remoteJobs = new TreeSet<RemoteItem>();
+    final String remoteFolder = request.getParameter("remoteFolder");
+    final String remoteUrl = remoteJenkins.getUrl() + remoteFolder;
+    final String recursiveSearch = request.getParameter(Constants.RECURSIVE_PARAM);
+    doQueryInternal(null, remoteUrl, CredentialsUtils.getCredentials(credentialId), recursiveSearch, remoteJobs);
+
+    if (remoteJobsAvailable != null && remoteJobsAvailable.equalsIgnoreCase("true")) {
       if (request.hasParameter(Constants.JOB_URL_PARAM)) {
         for (final String jobUrl : Arrays.asList(request.getParameterValues(Constants.JOB_URL_PARAM))) {
-          doImportInternal(jobUrl, localFolder);
+          doImportInternal(jobUrl, localFolder, credentialId, remoteJobs, remoteJobsImportStatus);
         }
       }
     }
 
-    response.forwardToPreviousPage(request);
+    new ForwardToView(this, "index")
+            .with("step2", "true")
+            .with("remoteJobsAvailable", remoteJobsAvailable)
+            .with("remoteJobsImportStatus", remoteJobsImportStatus)
+            .with("remoteJobsImportStatusAvailable", remoteJobsImportStatus.size()>0)
+            .generateResponse(request, response, this);
   }
 
-  private void doImportInternal(String jobUrl, String localPath) throws IOException {
+  public void doQuery(final StaplerRequest request, final StaplerResponse response)
+          throws ServletException, IOException {
+    final SortedSet<RemoteItem> remoteJobs = new TreeSet<RemoteItem>();
+
+    final String remoteFolder = request.getParameter("remoteFolder");
+
+    final String site = request.getParameter("_.jenkinsSites");
+
+    JenkinsSite remoteJenkins = new JenkinsSite("", "");
+    for (JenkinsSite js : JobImportGlobalConfig.get().getSites()) {
+      if ((js.getName() + "-" + js.getUrl() + "-" + js.getDefaultCredentialsId()).equals(site)) {
+        remoteJenkins = js;
+        break;
+      }
+    }
+
+    final String credentialId = remoteJenkins.getDefaultCredentialsId();
+    final String remoteUrl = remoteJenkins.getUrl() + remoteFolder;
+    final String recursiveSearch = request.getParameter(Constants.RECURSIVE_PARAM);
+
+    doQueryInternal(null, remoteUrl, CredentialsUtils.getCredentials(credentialId), recursiveSearch, remoteJobs);
+
+    new ForwardToView(this, "index")
+            .with("step1", "true")
+            .with("remoteJenkins", remoteJenkins.getName() + "-" + remoteJenkins.getUrl() + "-" + remoteJenkins.getDefaultCredentialsId())
+            .with("remoteJobs", remoteJobs)
+            .with("remoteFolder", remoteFolder)
+            .with("recursiveSearch", recursiveSearch)
+            .with("remoteJobsAvailable", remoteJobs.size()>0)
+            .generateResponse(request, response, this);
+  }
+
+
+  private void doImportInternal(String jobUrl, String localPath,
+                                String credentialId,
+                                SortedSet<RemoteItem> remoteJobs,
+                                SortedMap<RemoteItem, RemoteItemImportStatus> remoteJobsImportStatus) throws IOException {
     final RemoteItem remoteJob = RemoteItemUtils.getRemoteJob(remoteJobs, jobUrl);
     if (remoteJob != null) {
       if (!remoteJobsImportStatus.containsKey(remoteJob)) {
@@ -121,9 +171,9 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
 
       // ---
 
-      if (StringUtils.isNotEmpty(localPath) && Jenkins.getActiveInstance().getItemByFullName(localPath + remoteJob.getName()) != null) {
+      if (StringUtils.isNotEmpty(localPath) && Jenkins.get().getItemByFullName(localPath + remoteJob.getName()) != null) {
         remoteJobsImportStatus.get(remoteJob).setStatus(MessagesUtils.formatFailedDuplicateJobName());
-      } else if (StringUtils.isEmpty(localPath) && Jenkins.getActiveInstance().getItem(remoteJob.getName()) != null) {
+      } else if (StringUtils.isEmpty(localPath) && Jenkins.get().getItem(remoteJob.getName()) != null) {
         remoteJobsImportStatus.get(remoteJob).setStatus(MessagesUtils.formatFailedDuplicateJobName());
       } else {
         InputStream inputStream = null;
@@ -135,10 +185,10 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
 
           final Item newItem;
           if (StringUtils.isNotEmpty(localPath)) {
-            newItem = Jenkins.getActiveInstance().getItemByFullName(localPath, com.cloudbees.hudson.plugins.folder.Folder.class).
+            newItem = Jenkins.get().getItemByFullName(localPath, com.cloudbees.hudson.plugins.folder.Folder.class).
                     createProjectFromXML(remoteJob.getFullName(), inputStream);
           } else {
-            newItem = Jenkins.getActiveInstance().
+            newItem = Jenkins.get().
                     createProjectFromXML(remoteJob.getFullName(), inputStream);
           }
 
@@ -150,22 +200,10 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
 
           if (remoteJob.isFolder() && ((RemoteFolder)remoteJob).hasChildren()) {
             for (RemoteItem childJob : ((RemoteFolder)remoteJob).getChildren()) {
-              doImportInternal(childJob.getUrl(), newItem.getFullName());
+              doImportInternal(childJob.getUrl(), newItem.getFullName(), credentialId, remoteJobs, remoteJobsImportStatus);
             }
           }
-          /*
-          try{
-            Jenkins instance= Jenkins.getActiveInstance();
-            instance.checkPermission(instance.ADMINISTER);
-            Jenkins.getActiveInstance().doReload();
-          } catch(AccessDeniedException2 ex2){
-            remoteJobsImportStatus.get(remoteJob).setStatus(MessagesUtils.formatSuccessNotReloaded());
-            LOG.log(Level.INFO, "Failed to reload Jenkins config because the user lacks the Overall Administer permission");
-          }
-          */
-        }
-
-        catch (final Exception e) {
+        } catch (final Exception e) {
           LOG.warning("Job Import Failed: " + e.getMessage());
           if (LOG.isLoggable(Level.INFO)) {
             LOG.log(Level.INFO, e.getMessage(), e);
@@ -173,7 +211,7 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
           remoteJobsImportStatus.get(remoteJob).setStatus(MessagesUtils.formatFailedException(e));
 
           try {
-            TopLevelItem created = Jenkins.getActiveInstance().getItem(remoteJob.getName());
+            TopLevelItem created = Jenkins.get().getItem(remoteJob.getName());
             if (created != null) {
               created.delete();
             }
@@ -181,30 +219,14 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
           catch (final InterruptedException e2) {
             // do nothing
           }
-        }
-
-        finally {
+        } finally {
           IOUtils.closeQuietly(inputStream);
         }
       }
     }
   }
 
-  public void doQuery(final StaplerRequest request, final StaplerResponse response) throws ServletException,
-      IOException {
-    remoteJobs.clear();
-    remoteJobsImportStatus.clear();
-    remoteUrl = request.getParameter(Constants.REMOTE_URL_PARAM);
-    credentialId = request.getParameter("_.credentialId");
-
-    recursiveSearch = request.getParameter(Constants.RECURSIVE_PARAM);
-
-    doQueryInternal(null, remoteUrl, CredentialsUtils.getCredentials(credentialId));
-
-    response.forwardToPreviousPage(request);
-  }
-
-  private void doQueryInternal(RemoteFolder parent, String url, NullSafeCredentials credentials) {
+  private void doQueryInternal(RemoteFolder parent, String url, NullSafeCredentials credentials, String recursiveSearch, SortedSet<RemoteItem> remoteJobs) {
     remoteJobs.addAll(RestApiClient.getRemoteItems(parent, url, credentials, isRecursive(recursiveSearch)));
   }
 
@@ -212,12 +234,8 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
     return StringUtils.equals("on", param);
   }
 
-  public FormValidation doTestConnection(@QueryParameter("remoteUrl") final String remoteUrl) {
-    return FormValidation.ok();
-  }
-
   public String getRootUrl() {
-      return Jenkins.getActiveInstance().getRootUrl();
+      return Jenkins.get().getRootUrl();
   }
 
   public String getDisplayName() {
@@ -228,47 +246,13 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
     return "/images/32x32/setting.png";
   }
 
-  public SortedSet<RemoteItem> getRemoteJobs() {
-    return remoteJobs;
-  }
-
-  public SortedMap<RemoteItem, RemoteItemImportStatus> getRemoteJobsImportStatus() {
-    return remoteJobsImportStatus;
-  }
-
-  public String getRemoteUrl() {
-    return remoteUrl;
-  }
-
   public String getUrlName() {
     return "/" + Constants.URL_NAME;
   }
 
-  public boolean isRemoteJobsAvailable() {
-    return remoteJobs.size() > 0;
-  }
-
-  public boolean isRemoteJobsImportStatusAvailable() {
-    return remoteJobsImportStatus.size() > 0;
-  }
-
-  public void setRemoteUrl(final String remoteUrl) {
-    this.remoteUrl = remoteUrl;
-  }
-
-  public String getCredentialId() { return credentialId; }
-
-  public String getLocalFolder() {
-    return localFolder;
-  }
-
-  public void setLocalFolder(String localFolder) {
-    this.localFolder = localFolder;
-  }
-
   @Override
   public Descriptor<JobImportAction> getDescriptor() {
-    return Jenkins.getActiveInstance().getDescriptorOrDie(getClass());
+    return Jenkins.get().getDescriptorOrDie(getClass());
   }
   
   @Extension
@@ -282,17 +266,23 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
               .includeEmptyValue()
               .includeMatchingAs(
                       Jenkins.getAuthentication(),
-                      Jenkins.getInstance(),
+                      Jenkins.getInstanceOrNull(),
                       StandardUsernamePasswordCredentials.class,
                       Collections.<DomainRequirement>emptyList(),
                       CredentialsMatchers.always()
               ).includeMatchingAs(
                       ACL.SYSTEM,
-                      Jenkins.getInstance(),
+                      Jenkins.getInstanceOrNull(),
                       StandardUsernamePasswordCredentials.class,
                       Collections.<DomainRequirement>emptyList(),
                       CredentialsMatchers.always()
               );
+    }
+
+    public ListBoxModel doFillJenkinsSitesItems() {
+      final ListBoxModel listBoxModel = new ListBoxModel();
+      JobImportGlobalConfig.get().getSites().stream().forEach(s -> listBoxModel.add(s.getName(), s.getName() + "-" + s.getUrl() + "-" + s.getDefaultCredentialsId()));
+      return listBoxModel;
     }
   }
 }
