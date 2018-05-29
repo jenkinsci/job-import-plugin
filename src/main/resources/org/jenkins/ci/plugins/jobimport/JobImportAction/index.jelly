@@ -64,6 +64,11 @@
               <f:entry title="${%Job.Import.Plugin.Import.Section.LocalFolder.Title}" field="localFolder">
                 <f:textbox name="localFolder" field="localFolder" value="${it.localFolder}"/>
               </f:entry>
+              <j:if test="${h.hasPermission(app.ADMINISTER)}">
+                  <f:entry  title="${%Install required plugins}" field="plugins">
+                    <f:checkbox name="plugins" value="${plugins}" default="false"/>
+                  </f:entry>
+              </j:if>
               <table class="jobImportPlugin" cellpadding="3" cellspacing="3">
                 <tr>
                   <th>Import?</th>

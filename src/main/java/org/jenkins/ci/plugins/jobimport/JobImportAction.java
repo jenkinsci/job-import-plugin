@@ -30,6 +30,7 @@ import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import hudson.Extension;
+import hudson.PluginManager;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
 import hudson.model.Item;
@@ -123,7 +124,7 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
     if (remoteJobsAvailable != null && remoteJobsAvailable.equalsIgnoreCase("true")) {
       if (request.hasParameter(Constants.JOB_URL_PARAM)) {
         for (final String jobUrl : Arrays.asList(request.getParameterValues(Constants.JOB_URL_PARAM))) {
-          doImportInternal(jobUrl, localFolder, credentialId, remoteJobs, remoteJobsImportStatus);
+          doImportInternal(jobUrl, localFolder, credentialId, shouldInstallPlugins(request.getParameter("plugins")), remoteJobs, remoteJobsImportStatus);
         }
       }
     }
@@ -171,6 +172,7 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
 
   private void doImportInternal(String jobUrl, String localPath,
                                 String credentialId,
+                                boolean installPlugins,
                                 SortedSet<RemoteItem> remoteJobs,
                                 SortedMap<RemoteItem, RemoteItemImportStatus> remoteJobsImportStatus) throws IOException {
     final RemoteItem remoteJob = RemoteItemUtils.getRemoteJob(remoteJobs, jobUrl);
@@ -203,6 +205,13 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
           }
 
           if (newItem != null) {
+
+            if (installPlugins ) {
+              Jenkins instance = Jenkins.get();
+              instance.getAuthorizationStrategy().getACL(instance).checkPermission(Jenkins.ADMINISTER);
+              PluginManager.createDefault(Jenkins.get()).prevalidateConfig(inputStream);
+            }
+
             newItem.save();
           }
 
@@ -210,7 +219,7 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
 
           if (remoteJob.isFolder() && ((RemoteFolder)remoteJob).hasChildren()) {
             for (RemoteItem childJob : ((RemoteFolder)remoteJob).getChildren()) {
-              doImportInternal(childJob.getUrl(), newItem.getFullName(), credentialId, remoteJobs, remoteJobsImportStatus);
+              doImportInternal(childJob.getUrl(), newItem.getFullName(), credentialId, installPlugins, remoteJobs, remoteJobsImportStatus);
             }
           }
         } catch (final Exception e) {
@@ -241,6 +250,9 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
   }
 
   private boolean isRecursive(String param) {
+    return StringUtils.equals("on", param);
+  }
+  private boolean shouldInstallPlugins(String param) {
     return StringUtils.equals("on", param);
   }
 
