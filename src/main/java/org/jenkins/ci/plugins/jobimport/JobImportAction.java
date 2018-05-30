@@ -31,6 +31,7 @@ import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredenti
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import hudson.Extension;
 import hudson.PluginManager;
+import hudson.model.AbstractItem;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
 import hudson.model.Item;
@@ -61,6 +62,8 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
 import javax.servlet.ServletException;
+import javax.xml.transform.Source;
+import javax.xml.transform.stream.StreamSource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
@@ -124,7 +127,7 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
     if (remoteJobsAvailable != null && remoteJobsAvailable.equalsIgnoreCase("true")) {
       if (request.hasParameter(Constants.JOB_URL_PARAM)) {
         for (final String jobUrl : Arrays.asList(request.getParameterValues(Constants.JOB_URL_PARAM))) {
-          doImportInternal(jobUrl, localFolder, credentialId, shouldInstallPlugins(request.getParameter("plugins")), remoteJobs, remoteJobsImportStatus);
+          doImportInternal(jobUrl, localFolder, credentialId, shouldInstallPlugins(request.getParameter("plugins")), shouldUpdate(request.getParameter("update")), remoteJobs, remoteJobsImportStatus);
         }
       }
     }
@@ -173,6 +176,7 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
   private void doImportInternal(String jobUrl, String localPath,
                                 String credentialId,
                                 boolean installPlugins,
+                                boolean update,
                                 SortedSet<RemoteItem> remoteJobs,
                                 SortedMap<RemoteItem, RemoteItemImportStatus> remoteJobsImportStatus) throws IOException {
     final RemoteItem remoteJob = RemoteItemUtils.getRemoteJob(remoteJobs, jobUrl);
@@ -183,9 +187,9 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
 
       // ---
 
-      if (StringUtils.isNotEmpty(localPath) && Jenkins.get().getItemByFullName(localPath + remoteJob.getName()) != null) {
+      if (!update && StringUtils.isNotEmpty(localPath) && Jenkins.get().getItemByFullName(localPath + remoteJob.getName()) != null) {
         remoteJobsImportStatus.get(remoteJob).setStatus(MessagesUtils.formatFailedDuplicateJobName());
-      } else if (StringUtils.isEmpty(localPath) && Jenkins.get().getItem(remoteJob.getName()) != null) {
+      } else if (!update && StringUtils.isEmpty(localPath) && Jenkins.get().getItem(remoteJob.getName()) != null) {
         remoteJobsImportStatus.get(remoteJob).setStatus(MessagesUtils.formatFailedDuplicateJobName());
       } else {
         InputStream inputStream = null;
@@ -197,11 +201,24 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
 
           final Item newItem;
           if (StringUtils.isNotEmpty(localPath) && !StringUtils.equals("/", localPath.trim())) {
-            newItem = Jenkins.get().getItemByFullName(localPath, com.cloudbees.hudson.plugins.folder.Folder.class).
-                    createProjectFromXML(remoteJob.getFullName(), inputStream);
+            String fullName = localPath.endsWith("/") ? localPath + remoteJob.getFullName() : localPath + "/" + remoteJob.getFullName();
+            Item currentItem = Jenkins.get().getItemByFullName(localPath);
+            if (update && currentItem instanceof AbstractItem) {
+              ((AbstractItem)currentItem).updateByXml((Source)new StreamSource(inputStream));
+              newItem = currentItem;
+            } else {
+              newItem = Jenkins.get().getItemByFullName(localPath, com.cloudbees.hudson.plugins.folder.Folder.class).
+                      createProjectFromXML(remoteJob.getFullName(), inputStream);
+            }
           } else {
-            newItem = Jenkins.get().
-                    createProjectFromXML(remoteJob.getFullName(), inputStream);
+            Item currentItem = Jenkins.get().getItemByFullName(remoteJob.getFullName());
+            if (update && currentItem instanceof AbstractItem) {
+              ((AbstractItem)currentItem).updateByXml((Source)new StreamSource(inputStream));
+              newItem = currentItem;
+            } else {
+              newItem = Jenkins.get().
+                      createProjectFromXML(remoteJob.getFullName(), inputStream);
+            }
           }
 
           if (newItem != null) {
@@ -220,7 +237,7 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
 
           if (remoteJob.isFolder() && ((RemoteFolder)remoteJob).hasChildren()) {
             for (RemoteItem childJob : ((RemoteFolder)remoteJob).getChildren()) {
-              doImportInternal(childJob.getUrl(), newItem.getFullName(), credentialId, installPlugins, remoteJobs, remoteJobsImportStatus);
+              doImportInternal(childJob.getUrl(), newItem.getFullName(), credentialId, installPlugins, update, remoteJobs, remoteJobsImportStatus);
             }
           }
         } catch (final Exception e) {
@@ -254,6 +271,9 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
     return StringUtils.equals("on", param);
   }
   private boolean shouldInstallPlugins(String param) {
+    return StringUtils.equals("on", param);
+  }
+  private boolean shouldUpdate(String param) {
     return StringUtils.equals("on", param);
   }
 
