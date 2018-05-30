@@ -10,7 +10,7 @@ public final class Constants {
     public static final String URL_NAME= "job-import";
     public static final String REMOTE_URL_PARAM = "remoteUrl";
     public static final String JOB_URL_PARAM = "jobUrl";
-    public static final String XML_API_QUERY = "/api/xml?tree=jobs[name,url,description]";
+    public static final String XML_API_QUERY = "api/xml?tree=jobs[name,url,description]";
     public static final String RECURSIVE_PARAM = "recursiveSearch";
     public static final String LOCAL_FOLDER_PARAM = "localFolder";
 
