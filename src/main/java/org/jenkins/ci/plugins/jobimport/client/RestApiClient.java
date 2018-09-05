@@ -41,7 +41,7 @@ public final class RestApiClient {
                     boolean folder = (impl != null &&
                             "com.cloudbees.hudson.plugins.folder.Folder".equals(impl));
                     String desc = RemoteItemUtils.text(job, "description");
-                    String jobUrl = RemoteItemUtils.text(job, "url");
+                    String jobUrl = url + "/job" + RemoteItemUtils.text(job, "url").split("job")[1];
                     String name = RemoteItemUtils.text(job, "name");
 
                     final RemoteItem item = folder ?
