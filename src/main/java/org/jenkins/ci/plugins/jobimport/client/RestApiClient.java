@@ -13,6 +13,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 import javax.xml.parsers.DocumentBuilderFactory;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -43,6 +44,11 @@ public final class RestApiClient {
                     String desc = RemoteItemUtils.text(job, "description");
                     String jobUrl = RemoteItemUtils.text(job, "url");
                     String name = RemoteItemUtils.text(job, "name");
+                    //jenkins rest api bug when jenkins server port is not 8080
+                    if (jobUrl != null && jobUrl.contains(":8080")){
+                        URL serverUrl = new URL(url);
+                        jobUrl = jobUrl.replace(":8080",":"+serverUrl.getPort());
+                    }
 
                     final RemoteItem item = folder ?
                             new RemoteFolder(name, impl, jobUrl, desc, parent) :
