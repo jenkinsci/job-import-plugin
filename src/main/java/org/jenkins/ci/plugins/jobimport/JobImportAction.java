@@ -56,10 +56,13 @@ import org.jenkins.ci.plugins.jobimport.utils.CredentialsUtils;
 import org.jenkins.ci.plugins.jobimport.utils.CredentialsUtils.NullSafeCredentials;
 import org.jenkins.ci.plugins.jobimport.utils.RemoteItemUtils;
 import org.jenkins.ci.plugins.jobimport.utils.URLUtils;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.ForwardToView;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.verb.POST;
 
 import javax.servlet.ServletException;
 import javax.xml.transform.Source;
@@ -99,8 +102,13 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
     response.sendRedirect(Jenkins.get().getRootUrl() + getUrlName());
   }
 
+  @POST
+  @Restricted(NoExternalUse.class)
   public void doImport(final StaplerRequest request, final StaplerResponse response)
           throws ServletException, IOException {
+
+    Jenkins.get().checkPermission(JOB_IMPORT);
+
     final SortedMap<RemoteItem, RemoteItemImportStatus> remoteJobsImportStatus = new TreeMap<RemoteItem, RemoteItemImportStatus>();
 
     final String localFolder = request.getParameter(Constants.LOCAL_FOLDER_PARAM);
@@ -139,9 +147,12 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
             .with("remoteJobsImportStatusAvailable", remoteJobsImportStatus.size()>0)
             .generateResponse(request, response, this);
   }
-
+   @POST
   public void doQuery(final StaplerRequest request, final StaplerResponse response)
           throws ServletException, IOException {
+
+    Jenkins.get().checkPermission(JOB_IMPORT);
+
     final SortedSet<RemoteItem> remoteJobs = new TreeSet<RemoteItem>();
 
     final String remoteFolder = request.getParameter("remoteFolder");

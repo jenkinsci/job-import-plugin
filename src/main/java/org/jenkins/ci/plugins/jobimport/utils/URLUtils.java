@@ -52,16 +52,6 @@ import javax.xml.bind.DatatypeConverter;
  * @since 1.0
  */
 public final class URLUtils {
-    public static InputStream fetchUrl2(String url, String username, String password) throws MalformedURLException, IOException {
-        notNull(url);
-        notNull(username);
-        notNull(password);
-        URLConnection conn = new URL(url).openConnection();
-        if (!username.isEmpty()) {
-            conn.setRequestProperty("Authorization", "Basic " + DatatypeConverter.printBase64Binary((username + ":" + password).getBytes()));
-        }
-        return conn.getInputStream();
-    }
 
   public static void notNull(final Object object) {
     if (object == null) {
