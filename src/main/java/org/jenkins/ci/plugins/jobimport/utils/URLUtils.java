@@ -1,18 +1,18 @@
 /*
  * The MIT License
- * 
+ *
  * Copyright (c) 2011, Jesse Farinacci
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -24,12 +24,12 @@
 
 package org.jenkins.ci.plugins.jobimport.utils;
 
+import org.acegisecurity.AccessDeniedException;
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.AuthCache;
 import org.apache.http.client.CredentialsProvider;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.protocol.HttpClientContext;
@@ -41,11 +41,7 @@ import org.apache.http.impl.client.HttpClients;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLConnection;
-
-
 
 /**
  * @author <a href="mailto:jieryn@gmail.com">Jesse Farinacci</a>
@@ -59,7 +55,7 @@ public final class URLUtils {
     }
   }
 
-    public static InputStream fetchUrl(String url, String username, String password) throws MalformedURLException, IOException {
+    public static InputStream fetchUrl(String url, String username, String password) throws IOException {
         notNull(url);
         notNull(username);
         notNull(password);
@@ -87,7 +83,11 @@ public final class URLUtils {
 
         }
 
-        return builder.build().execute(target, new HttpGet(url), localContext).getEntity().getContent();
+        CloseableHttpResponse response = builder.build().execute(target, new HttpGet(url), localContext);
+        if (response.getStatusLine().getStatusCode() == 403) {
+            throw new AccessDeniedException("Remote Jenkins denied access. Please check the provided credentials");
+        }
+        return response.getEntity().getContent();
     }
 
 
