@@ -25,7 +25,10 @@
 package org.jenkins.ci.plugins.jobimport.utils;
 
 import org.acegisecurity.AccessDeniedException;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpException;
 import org.apache.http.HttpHost;
+import org.apache.http.HttpResponse;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.AuthCache;
@@ -55,7 +58,15 @@ public final class URLUtils {
     }
   }
 
-    public static InputStream fetchUrl(String url, String username, String password) throws IOException {
+    /**
+     *
+     * @param url The url to fetch
+     * @param username The username to use while fetching the url
+     * @param password The password to use while fetching the url
+     * @return The HttpResponse received.
+     * @throws IOException If there was an issue in the communication with the server
+     */
+    public static HttpResponse getUrl(String url, String username, String password) throws IOException {
         notNull(url);
         notNull(username);
         notNull(password);
@@ -82,11 +93,11 @@ public final class URLUtils {
             localContext.setAuthCache(authCache);
 
         }
-
-        CloseableHttpResponse response = builder.build().execute(target, new HttpGet(url), localContext);
-        if (response.getStatusLine().getStatusCode() == 403) {
-            throw new AccessDeniedException("Remote Jenkins denied access. Please check the provided credentials");
-        }
+        return builder.build().execute(target, new HttpGet(url), localContext);
+    }
+    
+    public static InputStream fetchUrl(String url, String username, String password) throws IOException {
+        HttpResponse response = getUrl(url, username, password);
         return response.getEntity().getContent();
     }
 
