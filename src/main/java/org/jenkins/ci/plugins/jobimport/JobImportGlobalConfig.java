@@ -33,7 +33,7 @@ public class JobImportGlobalConfig extends GlobalConfiguration {
     @Override
     public boolean configure(final StaplerRequest req, final JSONObject formData) {
         setSites(req.bindJSONToList(JenkinsSite.class, formData.get("sites")));
-        return false;
+        return true;
     }
 
     public List<JenkinsSite> getSites() {
