@@ -281,19 +281,20 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
   private String makeFolders(List<String> input) throws IOException {
     List<String> folders = new ArrayList<>();
     folders.addAll(input);
-    String path = folders.get(0);
-    if (!folderExists(path)) {
-      Jenkins.get().createProject(Folder.class, path);
+    StringBuilder path = new StringBuilder();
+    path.append(folders.get(0));
+    if (!folderExists(path.toString())) {
+      Jenkins.get().createProject(Folder.class, path.toString());
     }
     folders.remove(0);
     for (String folder : folders) {
-      String prevPath = path;
-      path = path + Constants.SEPARATOR + folder;
-      if (!folderExists(path)) {
+      String prevPath = path.toString();
+      path.append(Constants.JOBS_SEPARATOR).append(folder);
+      if (!folderExists(path.toString())) {
         getFolder(prevPath).createProject(Folder.class, folder);
       }
     }
-    return path;
+    return path.toString();
   }
 
   private Item addNewItemWithFolders(final RemoteItem remoteJob, InputStream inputStream) throws IOException ,IllegalStateException, IOException  {
