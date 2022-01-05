@@ -289,7 +289,7 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
     folders.remove(0);
     for (String folder : folders) {
       String prevPath = path.toString();
-      path.append(Constants.JOBS_SEPARATOR).append(folder);
+      path.append(Constants.SEPARATOR).append(folder);
       if (!folderExists(path.toString())) {
         getFolder(prevPath).createProject(Folder.class, folder);
       }
