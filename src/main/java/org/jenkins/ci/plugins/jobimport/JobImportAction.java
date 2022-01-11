@@ -297,7 +297,7 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
   }
 
   public String getIconFileName() {
-    return "/images/32x32/setting.png";
+    return "setting.png";
   }
 
   public String getUrlName() {
