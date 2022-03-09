@@ -35,7 +35,7 @@
   </parent>
 
   <artifactId>job-import-plugin</artifactId>
-  <version>3.5</version>
+  <version>3.6-SNAPSHOT</version>
   <packaging>hpi</packaging>
 
   <name>Job Import Plugin</name>
@@ -75,7 +75,7 @@
     <connection>scm:git:git://github.com/jenkinsci/job-import-plugin.git</connection>
     <developerConnection>scm:git:git@github.com:jenkinsci/job-import-plugin.git</developerConnection>
     <url>https://github.com/jenkinsci/job-import-plugin</url>
-    <tag>job-import-plugin-3.5</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <repositories>
