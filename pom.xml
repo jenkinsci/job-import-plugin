@@ -35,7 +35,7 @@
   </parent>
 
   <artifactId>job-import-plugin</artifactId>
-  <version>3.1-SNAPSHOT</version>
+  <version>3.6-SNAPSHOT</version>
   <packaging>hpi</packaging>
 
   <name>Job Import Plugin</name>
@@ -81,14 +81,14 @@
   <repositories>
     <repository>
       <id>repo.jenkins-ci.org</id>
-      <url>http://repo.jenkins-ci.org/public/</url>
+      <url>https://repo.jenkins-ci.org/public/</url>
     </repository>
   </repositories>
 
   <pluginRepositories>
     <pluginRepository>
       <id>repo.jenkins-ci.org</id>
-      <url>http://repo.jenkins-ci.org/public/</url>
+      <url>https://repo.jenkins-ci.org/public/</url>
     </pluginRepository>
   </pluginRepositories>
 
