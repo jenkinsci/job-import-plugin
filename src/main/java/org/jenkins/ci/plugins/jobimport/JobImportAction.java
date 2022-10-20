@@ -21,12 +21,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
 package org.jenkins.ci.plugins.jobimport;
 
+import com.cloudbees.hudson.plugins.folder.Folder;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
-import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import hudson.Extension;
@@ -41,10 +40,8 @@ import hudson.security.ACL;
 import hudson.security.Permission;
 import hudson.security.PermissionGroup;
 import hudson.security.PermissionScope;
-import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
-import net.sf.json.JSONObject;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jenkins.ci.plugins.jobimport.client.RestApiClient;
@@ -59,7 +56,6 @@ import org.jenkins.ci.plugins.jobimport.utils.URLUtils;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.ForwardToView;
-import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.verb.POST;
@@ -69,6 +65,7 @@ import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -78,8 +75,6 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import static org.jenkins.ci.plugins.jobimport.utils.CredentialsUtils.allCredentials;
 
 /**
  * @author <a href="mailto:jieryn@gmail.com">Jesse Farinacci</a>
@@ -109,12 +104,12 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
 
     Jenkins.get().checkPermission(JOB_IMPORT);
 
-    final SortedMap<RemoteItem, RemoteItemImportStatus> remoteJobsImportStatus = new TreeMap<RemoteItem, RemoteItemImportStatus>();
+    final SortedMap<RemoteItem, RemoteItemImportStatus> remoteJobsImportStatus = new TreeMap<>();
 
     final String localFolder = request.getParameter(Constants.LOCAL_FOLDER_PARAM);
-    final String remoteJobsAvailable = (String)request.getParameter("remoteJobsAvailable");
+    final String remoteJobsAvailable = (String) request.getParameter("remoteJobsAvailable");
 
-    final String site = (String)request.getParameter("remoteJenkins");
+    final String site = (String) request.getParameter("remoteJenkins");
 
     JenkinsSite remoteJenkins = new JenkinsSite("", "");
     for (JenkinsSite js : JobImportGlobalConfig.get().getSites()) {
@@ -126,10 +121,11 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
 
     final String credentialId = remoteJenkins.getDefaultCredentialsId();
 
-    final SortedSet<RemoteItem> remoteJobs = new TreeSet<RemoteItem>();
+    final SortedSet<RemoteItem> remoteJobs = new TreeSet<>();
     final String remoteFolder = request.getParameter("remoteFolder");
     final String remoteUrl = URLUtils.safeURL(remoteJenkins.getUrl(), remoteFolder);
     final String recursiveSearch = request.getParameter(Constants.RECURSIVE_PARAM);
+
     doQueryInternal(null, remoteUrl, CredentialsUtils.getCredentials(credentialId), recursiveSearch, remoteJobs);
 
     if (remoteJobsAvailable != null && remoteJobsAvailable.equalsIgnoreCase("true")) {
@@ -144,16 +140,17 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
             .with("step2", "true")
             .with("remoteJobsAvailable", remoteJobsAvailable)
             .with("remoteJobsImportStatus", remoteJobsImportStatus)
-            .with("remoteJobsImportStatusAvailable", remoteJobsImportStatus.size()>0)
+            .with("remoteJobsImportStatusAvailable", remoteJobsImportStatus.size() > 0)
             .generateResponse(request, response, this);
   }
-   @POST
+
+  @POST
   public void doQuery(final StaplerRequest request, final StaplerResponse response)
           throws ServletException, IOException {
 
     Jenkins.get().checkPermission(JOB_IMPORT);
 
-    final SortedSet<RemoteItem> remoteJobs = new TreeSet<RemoteItem>();
+    final SortedSet<RemoteItem> remoteJobs = new TreeSet<>();
 
     final String remoteFolder = request.getParameter("remoteFolder");
 
@@ -179,10 +176,9 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
             .with("remoteJobs", remoteJobs)
             .with("remoteFolder", remoteFolder)
             .with("recursiveSearch", recursiveSearch)
-            .with("remoteJobsAvailable", remoteJobs.size()>0)
+            .with("remoteJobsAvailable", remoteJobs.size() > 0)
             .generateResponse(request, response, this);
   }
-
 
   private void doImportInternal(String jobUrl, String localPath,
                                 String credentialId,
@@ -197,7 +193,6 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
       }
 
       // ---
-
       if (!update && StringUtils.isNotEmpty(localPath) && Jenkins.get().getItemByFullName(localPath + remoteJob.getName()) != null) {
         remoteJobsImportStatus.get(remoteJob).setStatus(MessagesUtils.formatFailedDuplicateJobName());
       } else if (!update && StringUtils.isEmpty(localPath) && Jenkins.get().getItem(remoteJob.getName()) != null) {
@@ -212,29 +207,31 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
 
           final Item newItem;
           if (StringUtils.isNotEmpty(localPath) && !StringUtils.equals("/", localPath.trim())) {
-            String fullName = localPath.endsWith("/") ? localPath + remoteJob.getFullName() : localPath + "/" + remoteJob.getFullName();
-            Item currentItem = Jenkins.get().getItemByFullName(localPath);
+            Item currentItem = Jenkins.get().getItemByFullName(remoteJob.getFullName());
             if (update && currentItem instanceof AbstractItem) {
-              ((AbstractItem)currentItem).updateByXml((Source)new StreamSource(inputStream));
+              ((AbstractItem) currentItem).updateByXml((Source) new StreamSource(inputStream));
               newItem = currentItem;
             } else {
-              newItem = Jenkins.get().getItemByFullName(localPath, com.cloudbees.hudson.plugins.folder.Folder.class).
-                      createProjectFromXML(remoteJob.getFullName(), inputStream);
+              if (!folderExists(localPath)) {
+                makeFolders(Arrays.asList(localPath.split("/")));
+              }
+              newItem = getFolder(localPath).createProjectFromXML(remoteJob.getName(), inputStream);
             }
           } else {
             Item currentItem = Jenkins.get().getItemByFullName(remoteJob.getFullName());
             if (update && currentItem instanceof AbstractItem) {
-              ((AbstractItem)currentItem).updateByXml((Source)new StreamSource(inputStream));
+              ((AbstractItem) currentItem).updateByXml((Source) new StreamSource(inputStream));
               newItem = currentItem;
             } else {
-              newItem = Jenkins.get().
-                      createProjectFromXML(remoteJob.getFullName(), inputStream);
+              newItem = remoteJob.hasParent()
+                  ? addNewItemWithFolders(remoteJob, inputStream)
+                  : Jenkins.get().createProjectFromXML(remoteJob.getName(), inputStream);
             }
           }
 
           if (newItem != null) {
 
-            if (installPlugins ) {
+            if (installPlugins) {
               Jenkins instance = Jenkins.get();
               instance.getAuthorizationStrategy().getACL(instance).checkPermission(Jenkins.ADMINISTER);
               PluginManager.createDefault(Jenkins.get()).prevalidateConfig(
@@ -246,8 +243,8 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
 
           remoteJobsImportStatus.get(remoteJob).setStatus(MessagesUtils.formatSuccess());
 
-          if (remoteJob.isFolder() && ((RemoteFolder)remoteJob).hasChildren()) {
-            for (RemoteItem childJob : ((RemoteFolder)remoteJob).getChildren()) {
+          if (remoteJob.isFolder() && ((RemoteFolder) remoteJob).hasChildren()) {
+            for (RemoteItem childJob : ((RemoteFolder) remoteJob).getChildren()) {
               doImportInternal(childJob.getUrl(), newItem.getFullName(), credentialId, installPlugins, update, remoteJobs, remoteJobsImportStatus);
             }
           }
@@ -263,8 +260,7 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
             if (created != null) {
               created.delete();
             }
-          }
-          catch (final InterruptedException e2) {
+          } catch (final InterruptedException e2) {
             // do nothing
           }
         } finally {
@@ -274,6 +270,41 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
     }
   }
 
+  private boolean folderExists(String folder) throws IOException {
+    return null != getFolder(folder);
+  }
+
+  private Folder getFolder(String folder) throws IOException {
+    return Jenkins.get().getItemByFullName(folder, Folder.class);
+  }
+
+  private String makeFolders(List<String> input) throws IOException {
+    List<String> folders = new ArrayList<>();
+    folders.addAll(input);
+    StringBuilder path = new StringBuilder();
+    path.append(folders.get(0));
+    if (!folderExists(path.toString())) {
+      Jenkins.get().createProject(Folder.class, path.toString());
+    }
+    folders.remove(0);
+    for (String folder : folders) {
+      String prevPath = path.toString();
+      path.append(Constants.SEPARATOR).append(folder);
+      if (!folderExists(path.toString())) {
+        getFolder(prevPath).createProject(Folder.class, folder);
+      }
+    }
+    return path.toString();
+  }
+
+  private Item addNewItemWithFolders(final RemoteItem remoteJob, InputStream inputStream) throws IOException ,IllegalStateException, IOException  {
+    List<String> folders = new ArrayList<>();
+    folders.addAll(Arrays.asList(remoteJob.getFullName().split(Constants.SEPARATOR)));
+    //last is the job name
+    folders.remove(folders.size() - 1);
+    return getFolder(makeFolders(folders)).createProjectFromXML(remoteJob.getName(), inputStream);
+  }
+
   private void doQueryInternal(RemoteFolder parent, String url, NullSafeCredentials credentials, String recursiveSearch, SortedSet<RemoteItem> remoteJobs) {
     remoteJobs.addAll(RestApiClient.getRemoteItems(parent, url, credentials, isRecursive(recursiveSearch)));
   }
@@ -281,9 +312,11 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
   private boolean isRecursive(String param) {
     return StringUtils.equals("on", param);
   }
+
   private boolean shouldInstallPlugins(String param) {
     return StringUtils.equals("on", param);
   }
+
   private boolean shouldUpdate(String param) {
     return StringUtils.equals("on", param);
   }
@@ -292,14 +325,17 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
       return Jenkins.get().getRootUrl();
   }
 
+  @Override
   public String getDisplayName() {
     return Messages.DisplayName();
   }
 
+  @Override
   public String getIconFileName() {
     return "setting.png";
   }
 
+  @Override
   public String getUrlName() {
     return "/" + Constants.URL_NAME;
   }
@@ -308,7 +344,7 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
   public Descriptor<JobImportAction> getDescriptor() {
     return Jenkins.get().getDescriptorOrDie(getClass());
   }
-  
+
   @Extension
   public static final class JobImportActionDescriptor extends Descriptor<JobImportAction> {
 
