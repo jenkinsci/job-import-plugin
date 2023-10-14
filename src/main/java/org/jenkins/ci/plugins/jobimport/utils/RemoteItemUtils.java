@@ -60,7 +60,6 @@ public final class RemoteItemUtils {
     }
 
     static RemoteItem findFirstMAtchingRemoteItem(SortedSet<RemoteItem> items, String filter) {
-        final List<RemoteItem> list = new ArrayList<>();
         if (StringUtils.isNotEmpty(filter)) {
             for (RemoteItem item: items) {
                 if (filter.trim().equals(item.getUrl().trim())) {
