@@ -36,7 +36,6 @@ public final class RemoteItemUtils {
     }
 
     private static String fullName(RemoteItem item, String name) {
-        final String full = item.getName() + Constants.JOBS_SEPARATOR_F + name;
         return item.hasParent() ? fullName(item.getParent(), name) : name;
     }
 
