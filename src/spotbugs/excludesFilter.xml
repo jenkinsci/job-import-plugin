@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<FindBugsFilter>
+  <!--
+    Exclusions in this section have been triaged and determined to be
+    false positives.
+  -->
+
+  <!--
+    Here lies technical debt. Exclusions in this section have not yet
+    been triaged. When working on this section, pick an exclusion to
+    triage, then:
+
+    - Add a @SuppressFBWarnings(value = "[...]", justification = "[...]")
+      annotation if it is a false positive.  Indicate the reason why
+      it is a false positive, then remove the exclusion from this
+      section.
+
+    - If it is not a false positive, fix the bug, then remove the
+      exclusion from this section.
+   -->
+  <Match>
+    <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"/>
+    <Class name="org.jenkins.ci.plugins.jobimport.JobImportAction"/>
+    <Method name="doImportInternal"/>
+  </Match>
+  <Match>
+    <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"/>
+    <Class name="org.jenkins.ci.plugins.jobimport.JobImportAction$JobImportActionDescriptor"/>
+    <Method name="doFillCredentialIdItems"/>
+  </Match>
+  <Match>
+    <Bug pattern="REC_CATCH_EXCEPTION"/>
+    <Class name="org.jenkins.ci.plugins.jobimport.JobImportAction"/>
+    <Method name="doImportInternal"/>
+  </Match>
+  <Match>
+    <Bug pattern="REC_CATCH_EXCEPTION"/>
+    <Class name="org.jenkins.ci.plugins.jobimport.client.RestApiClient"/>
+    <Method name="getRemoteItems"/>
+  </Match>
+  <Match>
+    <Bug pattern="NM_METHOD_NAMING_CONVENTION"/>
+    <Class name="org.jenkins.ci.plugins.jobimport.Messages"/>
+    <Method name="DisplayName"/>
+  </Match>
+</FindBugsFilter>

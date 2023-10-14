@@ -31,7 +31,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>3.5</version>
+    <version>4.74</version>
   </parent>
 
   <artifactId>job-import-plugin</artifactId>
@@ -45,9 +45,7 @@
   <url>http://wiki.jenkins-ci.org/display/JENKINS/Job+Import+Plugin</url>
 
   <properties>
-    <jenkins.version>2.107.3</jenkins.version>
-    <java.level>8</java.level>
-    <findbugs.failOnError>false</findbugs.failOnError>
+    <jenkins.version>2.361.4</jenkins.version>
   </properties>
 
   <licenses>
@@ -105,26 +103,34 @@
     </plugins>
   </build>
 
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>io.jenkins.tools.bom</groupId>
+        <artifactId>bom-2.361.x</artifactId>
+        <version>2102.v854b_fec19c92</version>
+        <scope>import</scope>
+        <type>pom</type>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
   <dependencies>
     <dependency>
-      <groupId>commons-lang</groupId>
-      <artifactId>commons-lang</artifactId>
-      <version>2.6</version>
+      <groupId>io.jenkins.plugins</groupId>
+      <artifactId>commons-lang3-api</artifactId>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>apache-httpcomponents-client-4-api</artifactId>
-      <version>4.5.3-2.0</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>credentials</artifactId>
-      <version>2.1.13</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>cloudbees-folder</artifactId>
-      <version>6.0.4</version>
     </dependency>
 
     <dependency>
