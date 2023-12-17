@@ -1,7 +1,7 @@
 package org.jenkins.ci.plugins.jobimport;
 
-import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
-import com.gargoylesoftware.htmlunit.html.*;
+import org.htmlunit.FailingHttpStatusCodeException;
+import org.htmlunit.html.*;
 import org.jenkins.ci.plugins.jobimport.utils.Constants;
 import org.jvnet.hudson.test.JenkinsRule;
 
