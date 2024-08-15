@@ -36,7 +36,6 @@ public final class RemoteItemUtils {
     }
 
     private static String fullName(RemoteItem item, String name) {
-        final String full = item.getName() + Constants.JOBS_SEPARATOR_F + name;
         return item.hasParent() ? fullName(item.getParent(), name) : name;
     }
 
@@ -61,7 +60,6 @@ public final class RemoteItemUtils {
     }
 
     static RemoteItem findFirstMAtchingRemoteItem(SortedSet<RemoteItem> items, String filter) {
-        final List<RemoteItem> list = new ArrayList<>();
         if (StringUtils.isNotEmpty(filter)) {
             for (RemoteItem item: items) {
                 if (filter.trim().equals(item.getUrl().trim())) {

@@ -31,7 +31,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>3.5</version>
+    <version>4.86</version>
   </parent>
 
   <artifactId>job-import-plugin</artifactId>
@@ -45,9 +45,8 @@
   <url>http://wiki.jenkins-ci.org/display/JENKINS/Job+Import+Plugin</url>
 
   <properties>
-    <jenkins.version>2.107.3</jenkins.version>
-    <java.level>8</java.level>
-    <findbugs.failOnError>false</findbugs.failOnError>
+    <jenkins.version>2.426.3</jenkins.version>
+    <spotbugs.threshold>High</spotbugs.threshold>
   </properties>
 
   <licenses>
@@ -72,7 +71,7 @@
   </developers>
 
   <scm>
-    <connection>scm:git:git://github.com/jenkinsci/job-import-plugin.git</connection>
+    <connection>scm:git:https://github.com/jenkinsci/job-import-plugin.git</connection>
     <developerConnection>scm:git:git@github.com:jenkinsci/job-import-plugin.git</developerConnection>
     <url>https://github.com/jenkinsci/job-import-plugin</url>
     <tag>HEAD</tag>
@@ -105,26 +104,34 @@
     </plugins>
   </build>
 
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>io.jenkins.tools.bom</groupId>
+        <artifactId>bom-2.426.x</artifactId>
+        <version>3208.vb_21177d4b_cd9</version>
+        <scope>import</scope>
+        <type>pom</type>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
   <dependencies>
     <dependency>
-      <groupId>commons-lang</groupId>
-      <artifactId>commons-lang</artifactId>
-      <version>2.6</version>
+      <groupId>io.jenkins.plugins</groupId>
+      <artifactId>commons-lang3-api</artifactId>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>apache-httpcomponents-client-4-api</artifactId>
-      <version>4.5.3-2.0</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>credentials</artifactId>
-      <version>2.1.13</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>cloudbees-folder</artifactId>
-      <version>6.0.4</version>
     </dependency>
 
     <dependency>
