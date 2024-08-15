@@ -46,6 +46,7 @@
 
   <properties>
     <jenkins.version>2.426.3</jenkins.version>
+    <spotbugs.threshold>High</spotbugs.threshold>
   </properties>
 
   <licenses>
