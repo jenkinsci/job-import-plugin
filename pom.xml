@@ -42,7 +42,7 @@
   <description>
     Import jobs from another Jenkins instance.
   </description>
-  <url>http://wiki.jenkins-ci.org/display/JENKINS/Job+Import+Plugin</url>
+  <url>https://plugins.jenkins.io/job-import-plugin/</url>
 
   <properties>
     <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
