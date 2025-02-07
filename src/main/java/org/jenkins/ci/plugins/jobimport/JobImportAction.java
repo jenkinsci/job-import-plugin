@@ -60,11 +60,11 @@ import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.ForwardToView;
 import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerResponse2;
 import org.kohsuke.stapler.verb.POST;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 import java.io.IOException;
@@ -97,14 +97,14 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
 
   private static final Logger LOG = Logger.getLogger(JobImportAction.class.getName());
 
-  public void doClear(final StaplerRequest request, final StaplerResponse response)
+  public void doClear(final StaplerRequest2 request, final StaplerResponse2 response)
           throws ServletException, IOException {
     response.sendRedirect(Jenkins.get().getRootUrl() + getUrlName());
   }
 
   @POST
   @Restricted(NoExternalUse.class)
-  public void doImport(final StaplerRequest request, final StaplerResponse response)
+  public void doImport(final StaplerRequest2 request, final StaplerResponse2 response)
           throws ServletException, IOException {
 
     Jenkins.get().checkPermission(JOB_IMPORT);
@@ -148,7 +148,7 @@ public final class JobImportAction implements RootAction, Describable<JobImportA
             .generateResponse(request, response, this);
   }
    @POST
-  public void doQuery(final StaplerRequest request, final StaplerResponse response)
+  public void doQuery(final StaplerRequest2 request, final StaplerResponse2 response)
           throws ServletException, IOException {
 
     Jenkins.get().checkPermission(JOB_IMPORT);
