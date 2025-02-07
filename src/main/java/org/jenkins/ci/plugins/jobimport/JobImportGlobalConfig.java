@@ -11,7 +11,7 @@ import jenkins.model.GlobalConfiguration;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.jenkins.ci.plugins.jobimport.model.JenkinsSite;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -31,7 +31,7 @@ public class JobImportGlobalConfig extends GlobalConfiguration {
     }
 
     @Override
-    public boolean configure(final StaplerRequest req, final JSONObject formData) {
+    public boolean configure(final StaplerRequest2 req, final JSONObject formData) {
         setSites(req.bindJSONToList(JenkinsSite.class, formData.get("sites")));
         return true;
     }
