@@ -115,7 +115,7 @@
                 </tr>
                 <j:forEach var="status" items="${remoteJobsImportStatus}">
                   <tr>
-                    <td><a target="_blank" href="${it.rootUrl}/job/${status.key.name}">${status.key.name}</a></td>
+                    <td>${status.key.fullName}</td>
                     <td>${status.value.status}</td>
                   </tr>
                 </j:forEach>
