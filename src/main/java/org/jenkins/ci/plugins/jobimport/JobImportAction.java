@@ -46,7 +46,7 @@ import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.jenkins.ci.plugins.jobimport.client.RestApiClient;
 import org.jenkins.ci.plugins.jobimport.model.JenkinsSite;
 import org.jenkins.ci.plugins.jobimport.model.RemoteFolder;
