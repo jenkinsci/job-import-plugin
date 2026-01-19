@@ -1,8 +1,7 @@
 package org.jenkins.ci.plugins.jobimport.utils;
 
-import org.apache.commons.lang.StringEscapeUtils;
-import org.apache.commons.lang.StringUtils;
-
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.text.StringEscapeUtils;
 import org.jenkins.ci.plugins.jobimport.model.RemoteFolder;
 import org.jenkins.ci.plugins.jobimport.model.RemoteItem;
 import org.w3c.dom.Element;
@@ -51,7 +50,7 @@ public final class RemoteItemUtils {
     }
 
     public static String cleanRemoteString(final String string) {
-        return StringUtils.substring(StringEscapeUtils.escapeHtml(string), 0, Constants.MAX_STR_LEN);
+        return StringUtils.substring(StringEscapeUtils.escapeHtml4(string), 0, Constants.MAX_STR_LEN);
     }
 
 

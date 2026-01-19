@@ -1,7 +1,7 @@
 package org.jenkins.ci.plugins.jobimport.client;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpResponse;
 import org.jenkins.ci.plugins.jobimport.model.RemoteFolder;
 import org.jenkins.ci.plugins.jobimport.model.RemoteItem;

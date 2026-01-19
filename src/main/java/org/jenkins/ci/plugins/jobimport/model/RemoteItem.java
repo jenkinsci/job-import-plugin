@@ -1,7 +1,7 @@
 package org.jenkins.ci.plugins.jobimport.model;
 
 import com.google.common.base.Objects;
-import org.apache.commons.lang.ObjectUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.jenkins.ci.plugins.jobimport.utils.RemoteItemUtils;
 
 import java.io.Serializable;
