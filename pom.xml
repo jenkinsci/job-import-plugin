@@ -35,7 +35,7 @@
   </parent>
 
   <artifactId>job-import-plugin</artifactId>
-  <version>${changelist}</version>
+  <version>143.${changelist}</version>
   <packaging>hpi</packaging>
 
   <name>Job Import Plugin</name>
