@@ -1,5 +1,7 @@
 package org.jenkins.ci.plugins.jobimport.model;
 
+import static org.jenkins.ci.plugins.jobimport.JobImportAction.JOB_IMPORT;
+
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
@@ -51,6 +53,9 @@ public class JenkinsSite extends AbstractDescribableImpl<JenkinsSite> {
             return "";
         }
         public ListBoxModel doFillDefaultCredentialsIdItems() {
+            if (!Jenkins.get().hasPermission(JOB_IMPORT)) {
+                return new StandardListBoxModel();
+            }
             return new StandardListBoxModel()
                     .includeEmptyValue()
                     .includeMatchingAs(
