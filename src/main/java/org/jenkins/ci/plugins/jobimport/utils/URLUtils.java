@@ -74,13 +74,22 @@ public final class URLUtils {
         HttpClientContext localContext = HttpClientContext.create();
 
         URL _url = new URL(url);
+        String userInfo = _url.getUserInfo();
         HttpHost target = new HttpHost(_url.getHost(), _url.getPort(), _url.getProtocol());
 
+        UsernamePasswordCredentials usernamePasswordCredentials = null;
+        if (userInfo != null && !userInfo.isEmpty()) {
+            usernamePasswordCredentials = new UsernamePasswordCredentials(userInfo);
+        }
         if(!username.isEmpty()) {
+            usernamePasswordCredentials = new UsernamePasswordCredentials(username, password);
+        }
+
+        if(usernamePasswordCredentials != null) {
             CredentialsProvider credsProvider = new BasicCredentialsProvider();
             credsProvider.setCredentials(//AuthScope.ANY,
                     new AuthScope(_url.getHost(), _url.getPort()),
-                    new UsernamePasswordCredentials(username, password));
+                    usernamePasswordCredentials);
 
             builder.setDefaultCredentialsProvider(credsProvider);
 
